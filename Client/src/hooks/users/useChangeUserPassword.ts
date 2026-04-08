@@ -7,7 +7,11 @@ interface ChangeUserPasswordDto {
   newPassword: string;
 }
 
-async function changeUserPassword({ id, oldPassword, newPassword }: ChangeUserPasswordDto) {
+async function changeUserPassword({
+  id,
+  oldPassword,
+  newPassword,
+}: ChangeUserPasswordDto) {
   const url = id ? `users/${id}/password` : `users/password`;
   return await apiClient.patch(url, { oldPassword, newPassword });
 }
