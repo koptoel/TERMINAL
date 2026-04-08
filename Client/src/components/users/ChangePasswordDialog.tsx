@@ -49,6 +49,7 @@ const ChangePasswordDialog = ({
     await toastPromise(
       changePasswordMutation.mutateAsync({
         id: userId,
+        oldPassword: oldPassword,
         newPassword: newPassword,
       }),
       {
