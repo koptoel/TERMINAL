@@ -14,7 +14,7 @@ export interface ChangePasswordDialogProps {
   open: boolean;
   setOpen: (arg0: boolean) => void;
   onClose: () => void;
-  userId: string;
+  userId?: string;
 }
 
 /**
