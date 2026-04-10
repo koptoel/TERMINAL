@@ -14,7 +14,7 @@ export interface ChangePasswordDialogProps {
   open: boolean;
   setOpen: (arg0: boolean) => void;
   onClose: () => void;
-  userId: string;
+  userId?: string;
 }
 
 /**
@@ -49,6 +49,7 @@ const ChangePasswordDialog = ({
     await toastPromise(
       changePasswordMutation.mutateAsync({
         id: userId,
+        oldPassword: oldPassword,
         newPassword: newPassword,
       }),
       {

@@ -102,7 +102,6 @@ const SidebarUserProfile = () => {
         onClose={() => {
           setDialogOpen(false);
         }}
-        userId={data.id}
       />
     </div>
   );
