@@ -8,10 +8,12 @@ on:
 
   workflow_dispatch:
 
-permissions: write-all
-
 jobs:
   build-and-push-images:
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     uses: ./.github/workflows/terminal-docker.yml
     with:
       registry-url: ghcr.io
