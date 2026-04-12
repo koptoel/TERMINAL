@@ -6,13 +6,17 @@
       stat:
         path: .env
       register: file_check
+
     - name: Fail if .env does not exist
       fail:
-        msg: "Create .env file! For reference see https://github.com/FlaviusAugustus/TERMINAL/blob/main/.env.sample.local"
+        msg: "Create .env file! For reference see https://github.com/koptoel/TERMINAL/blob/main/.env.sample.local"
       when: not file_check.stat.exists
+
     - name: Docker compose down
-      shell: docker compose --env-file .env -f oci://ghcr.io/flaviusaugustus/terminal/compose:latest down
+      shell: "docker compose --env-file .env -f {{ compose_image }} down"
+
     - name: Docker compose pull
-      shell: docker compose --env-file .env -f oci://ghcr.io/flaviusaugustus/terminal/compose:latest pull
+      shell: "docker compose --env-file .env -f {{ compose_image }} pull"
+
     - name: Docker compose up
-      shell: docker compose --env-file .env -f oci://ghcr.io/flaviusaugustus/terminal/compose:latest up -yd
+      shell: "docker compose --env-file .env -f {{ compose_image }} up -yd"
