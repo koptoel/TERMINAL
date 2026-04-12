@@ -38,9 +38,17 @@ jobs:
         env:
           ANSIBLE_USER: ${{ secrets.ansible-user }}
           ANSIBLE_HOST_KEY_CHECKING: false
+          # Te zmienne zmuszają Pythona i Ansible do użycia Twojego Home zamiast systemowego /tmp
+          TMPDIR: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
+          TEMP: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
+          TMP: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
+          ANSIBLE_REMOTE_TMP: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
           ANSIBLE_PIPELINING: "True"
-          ANSIBLE_REMOTE_TMP: "~/.ansible/tmp"
         run: |
+          # 1. Ręcznie tworzymy folder przez SSH zanim Ansible wystartuje
+          ssh -o StrictHostKeyChecking=no -p 50022 ${{ secrets.ansible-user }}@153.19.51.139 "mkdir -p ~/.ansible_tmp && chmod 700 ~/.ansible_tmp"
+          
+          # 2. Odpalamy Ansible
           ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
             --extra-vars "compose_image=oci://ghcr.io/${{ github.repository_owner }}/terminal/compose:latest" \
-            --private-key private_key.pem -u ${{ secrets.ansible-user }} -vvv
+            --private-key private_key.pem -u ${{ secrets.ansible-user }}
