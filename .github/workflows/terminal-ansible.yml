@@ -38,6 +38,7 @@ jobs:
         env:
           ANSIBLE_USER: ${{ secrets.ansible-user }}
           ANSIBLE_HOST_KEY_CHECKING: false
+          ANSIBLE_REMOTE_TMP: /tmp/.ansible/tmp
         run: |
           ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
             --extra-vars "compose_image=oci://ghcr.io/${{ github.repository_owner }}/terminal/compose:latest" \
