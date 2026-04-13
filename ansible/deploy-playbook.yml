@@ -2,6 +2,11 @@
   hosts: all
 
   tasks:
+
+    - name: Log into GitHub Container Registry
+      shell: "echo {{ registry_token }} | docker login ghcr.io -u {{ github_user }} --password-stdin"
+      no_log: true 
+  
     - name: Check if .env file exists
       stat:
         path: .env
