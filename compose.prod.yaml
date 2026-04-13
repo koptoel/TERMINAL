@@ -1,12 +1,12 @@
 name: terminal.prod
 services:
   client:
-    image: ghcr.io/flaviusaugustus/terminal/client:latest
+    image: ghcr.io/koptoel/terminal/client:latest
     ports:
       - 60005:5173
 
   server:
-    image: ghcr.io/flaviusaugustus/terminal/server:latest
+    image: ghcr.io/koptoel/terminal/server:latest
     ports:
       - 60004:5006
     environment:

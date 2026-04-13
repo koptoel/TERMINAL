@@ -28,15 +28,34 @@ jobs:
           host-list: ${{ secrets.deployment-targets }}
           group-name: web
 
+      # Ansible jest preinstalowany na ubuntu-latest, 
+      # ale zostawiamy, jeśli chcesz konkretną wersję z apt
       - name: Install Ansible
-        shell: bash
         run: |
           sudo apt update
           sudo apt install -y ansible
-
+          
       - name: Run Ansible Playbook
         env:
           ANSIBLE_USER: ${{ secrets.ansible-user }}
           ANSIBLE_HOST_KEY_CHECKING: false
+          # Zmienne TMPDIR zostają, bo uratowały nam skórę przy błędach dysku
+          TMPDIR: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
+          TEMP: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
+          TMP: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
+          ANSIBLE_REMOTE_TMP: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
+          ANSIBLE_PIPELINING: "True"
+          
         run: |
-          ansible-playbook -i inventory.ini ansible/deploy-playbook.yml --private-key private_key.pem -u ${{ secrets.ansible-user }}
+          # Używamy zmiennej zamiast twardego IP
+          ssh -o StrictHostKeyChecking=no -p 50022 -i private_key.pem ${{ secrets.ansible-user }}@${{ secrets.deployment-targets }} "mkdir -p ~/.ansible_tmp && chmod 700 ~/.ansible_tmp"
+          
+          ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
+            --extra-vars "compose_image=oci://ghcr.io/${{ github.repository_owner }}/terminal/compose:latest" \
+            --extra-vars "registry_token=${{ secrets.GITHUB_TOKEN }}" \
+            --extra-vars "github_user=${{ github.actor }}" \
+            --private-key private_key.pem -u ${{ secrets.ansible-user }}
+
+      - name: Cleanup
+        if: always()
+        run: rm -f private_key.pem
