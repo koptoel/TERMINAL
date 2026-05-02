@@ -39,7 +39,6 @@ jobs:
         env:
           ANSIBLE_USER: ${{ secrets.ansible-user }}
           ANSIBLE_HOST_KEY_CHECKING: false
-          # Zmienne TMPDIR zostają, bo uratowały nam skórę przy błędach dysku
           TMPDIR: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
           TEMP: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
           TMP: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
@@ -47,10 +46,17 @@ jobs:
           ANSIBLE_PIPELINING: "True"
           
         run: |
-          # Używamy zmiennej zamiast twardego IP
-          ssh -o StrictHostKeyChecking=no -p 50022 -i private_key.pem ${{ secrets.ansible-user }}@${{ secrets.deployment-targets }} "mkdir -p ~/.ansible_tmp && chmod 700 ~/.ansible_tmp"
+          # 1. Wyciągamy surowe dane z sekretu
+          RAW_TARGET="${{ secrets.deployment-targets }}"
+          
+          # 2. Wycinamy samo IP (zakładając format name:ip:port)
+          # Jeśli masz tam kilka hostów po przecinku, bierzemy pierwszy
+          TARGET_IP=$(echo "$RAW_TARGET" | cut -d',' -f1 | cut -d':' -f2)
+          
+          # 3. Teraz SSH dostaje czyste IP
           ssh -o StrictHostKeyChecking=no -p 50022 -i private_key.pem ${{ secrets.ansible-user }}@$TARGET_IP "mkdir -p ~/.ansible_tmp && chmod 700 ~/.ansible_tmp"
-
+          
+          # 4. Ansible korzysta już z inventory.ini, który jest poprawnie zbudowany
           ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
             --extra-vars "compose_image=oci://ghcr.io/${{ github.repository_owner }}/terminal/compose:latest" \
             --extra-vars "registry_token=${{ secrets.GITHUB_TOKEN }}" \
