@@ -1,3 +1,6 @@
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Exporter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -29,6 +32,28 @@ public static class Extensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        // --- START: HyperDX & OpenTelemetry ---
+        var serviceName = configuration["HyperDX:ServiceName"] ?? "terminal-backend";
+        var hdxEndpoint = configuration["HyperDX:Endpoint"];
+        var hdxApiKey = configuration["HyperDX:ApiKey"];
+
+        if (!string.IsNullOrEmpty(hdxEndpoint) && !string.IsNullOrEmpty(hdxApiKey))
+        {
+            services.AddOpenTelemetry()
+                .WithTracing(tracing => tracing
+                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
+                    .AddSource(serviceName)
+                    .AddAspNetCoreInstrumentation() // Œledzenie ¿¹dañ przychodz¹cych do API
+                    .AddHttpClientInstrumentation() // Œledzenie ¿¹dañ wychodz¹cych
+                    .AddEntityFrameworkCoreInstrumentation() // Œledzenie zapytañ do PostgreSQL!
+                    .AddOtlpExporter(options =>
+                    {
+                        options.Endpoint = new Uri(hdxEndpoint);
+                        options.Headers = $"Authorization={hdxApiKey}";
+                        options.Protocol = OtlpExportProtocol.HttpProtobuf;
+                    }));
+        }
+        // --- KONIEC: HyperDX ---
         services.AddControllers();
         services.AddSingleton<ExceptionMiddleware>();
         services.AddHttpContextAccessor();
