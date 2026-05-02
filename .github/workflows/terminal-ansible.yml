@@ -49,7 +49,8 @@ jobs:
         run: |
           # Używamy zmiennej zamiast twardego IP
           ssh -o StrictHostKeyChecking=no -p 50022 -i private_key.pem ${{ secrets.ansible-user }}@${{ secrets.deployment-targets }} "mkdir -p ~/.ansible_tmp && chmod 700 ~/.ansible_tmp"
-          
+          ssh -o StrictHostKeyChecking=no -p 50022 -i private_key.pem ${{ secrets.ansible-user }}@$TARGET_IP "mkdir -p ~/.ansible_tmp && chmod 700 ~/.ansible_tmp"
+
           ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
             --extra-vars "compose_image=oci://ghcr.io/${{ github.repository_owner }}/terminal/compose:latest" \
             --extra-vars "registry_token=${{ secrets.GITHUB_TOKEN }}" \

@@ -26,7 +26,9 @@ runs:
          hosts_str+="${name} ansible_host=${ip} ansible_port=${port}"$'\n'
         done
 
-        echo -e "hosts=$hosts_str" >> $GITHUB_OUTPUT
+        echo "hosts<<EOF" >> $GITHUB_OUTPUT
+        echo "$hosts_str" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
       shell: bash
       env:
         HOST_LIST: ${{ inputs.host-list }}
