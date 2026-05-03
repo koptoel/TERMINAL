@@ -24,7 +24,7 @@
       shell: "docker compose --env-file .env -f {{ compose_image }} pull"
 
     - name: Docker compose up
-      shell: "docker compose --env-file .env -f {{ compose_image }} up -d"
+      shell: "docker compose --env-file .env -f {{ compose_image }} up -yd"
       environment:
         OTEL_ENDPOINT: "{{ otel_endpoint }}"
         OTEL_HEADERS: "{{ otel_headers }}"
