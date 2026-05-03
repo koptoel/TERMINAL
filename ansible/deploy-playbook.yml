@@ -25,7 +25,7 @@
 
     - name: Docker compose up
       community.docker.docker_compose_v2:
-        project_src: /home/{{ ansible_user }}/terminal
+        project_src: "{{ ansible_env.HOME }}/git_repos/TERMINAL"
         state: present
       environment:
         OTEL_ENDPOINT: "{{ otel_endpoint }}"
