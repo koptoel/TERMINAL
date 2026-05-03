@@ -25,3 +25,6 @@
 
     - name: Docker compose up
       shell: "docker compose --env-file .env -f {{ compose_image }} up -yd"
+      environment:
+        otel_endpoint: "{{ otel_endpoint }}"
+        otel_headers: "{{ otel_headers }}"
