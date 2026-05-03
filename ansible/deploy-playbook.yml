@@ -26,7 +26,6 @@
     - name: Docker compose up
       shell:
         cmd: "docker compose --env-file .env -f {{ compose_image }} up -d"
-        chdir: "{{ ansible_user_dir }}/git_repos/TERMINAL"
       environment:
         OTEL_ENDPOINT: "{{ otel_endpoint }}"
         OTEL_HEADERS: "{{ otel_headers }}"
