@@ -37,6 +37,15 @@ jobs:
           sudo apt update
           sudo apt install -y ansible
           
+      - name: Verify Secrets Presence
+        run: |
+          echo "Checking secret variables..."
+          if [ -n "${{ secrets.otel-endpoint }}" ]; then
+            echo "otel-endpoint is present (masked)"
+          else
+            echo "otel-endpoint is EMPTY!"
+          fi
+
       - name: Run Ansible Playbook
         env:
           ANSIBLE_USER: ${{ secrets.ansible-user }}
