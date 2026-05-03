@@ -27,3 +27,5 @@ jobs:
       ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       ansible-user: ${{ secrets.ANSIBLE_USER }}
       deployment-targets: ${{ secrets.DEPLOYMENT_TARGETS }}
+      otel-endpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+      otel-headers: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
