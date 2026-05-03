@@ -32,8 +32,6 @@ jobs:
           host-list: ${{ secrets.deployment-targets }}
           group-name: web
 
-      # Ansible jest preinstalowany na ubuntu-latest, 
-      # ale zostawiamy, jeśli chcesz konkretną wersję z apt
       - name: Install Ansible
         run: |
           sudo apt update
@@ -50,21 +48,23 @@ jobs:
           ANSIBLE_PIPELINING: "True"
           
         run: |
-          # 1. Wyciągamy surowe dane z sekretu
+          # 1. Extract raw data from the secret
           RAW_TARGET="${{ secrets.deployment-targets }}"
           
-          # 2. Wycinamy samo IP (zakładając format name:ip:port)
-          # Jeśli masz tam kilka hostów po przecinku, bierzemy pierwszy
+          # 2. Extract the IP address (assuming name:ip:port format)
+          # If multiple comma-separated hosts are provided, take the first one
           TARGET_IP=$(echo "$RAW_TARGET" | cut -d',' -f1 | cut -d':' -f2)
           
-          # 3. Teraz SSH dostaje czyste IP
+          # 3. Pass the clean IP address to SSH
           ssh -o StrictHostKeyChecking=no -p 50022 -i private_key.pem ${{ secrets.ansible-user }}@$TARGET_IP "mkdir -p ~/.ansible_tmp && chmod 700 ~/.ansible_tmp"
           
-          # 4. Ansible korzysta już z inventory.ini, który jest poprawnie zbudowany
+          # 4. Ansible uses the properly generated inventory.ini file
           ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
             --extra-vars "compose_image=oci://ghcr.io/${{ github.repository_owner }}/terminal/compose:latest" \
             --extra-vars "registry_token=${{ secrets.GITHUB_TOKEN }}" \
             --extra-vars "github_user=${{ github.actor }}" \
+            --extra-vars "otel_endpoint=${{ secrets.otel-endpoint }}" \
+            --extra-vars "otel_headers=${{ secrets.otel-headers }}" \
             --private-key private_key.pem -u ${{ secrets.ansible-user }}
 
       - name: Cleanup
