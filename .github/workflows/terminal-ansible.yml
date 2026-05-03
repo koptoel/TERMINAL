@@ -7,6 +7,10 @@ on:
         required: true
       deployment-targets:
         required: true
+      otel-endpoint:
+        required: true
+      otel-headers:
+        required: true
 
 jobs:
   deploy:
