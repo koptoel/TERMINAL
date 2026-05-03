@@ -24,7 +24,9 @@
       shell: "docker compose --env-file .env -f {{ compose_image }} pull"
 
     - name: Docker compose up
-      shell: "docker compose --env-file .env -f {{ compose_image }} up -yd"
+      community.docker.docker_compose_v2:
+        project_src: /home/{{ ansible_user }}/terminal
+        state: present
       environment:
-        otel_endpoint: "{{ otel_endpoint }}"
-        otel_headers: "{{ otel_headers }}"
+        OTEL_ENDPOINT: "{{ otel_endpoint }}"
+        OTEL_HEADERS: "{{ otel_headers }}"
