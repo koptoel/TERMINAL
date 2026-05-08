@@ -1,7 +1,8 @@
 - name: Deploy
   hosts: all
-  gather_facts: yes
+  gather_facts: yes  # Zostawiamy tak, aby pobrać HOME
   vars:
+    # Naprawiamy Deprecation Warning: używamy ansible_facts
     env_path: "{{ ansible_facts['env']['HOME'] }}/.env"
 
   tasks:
@@ -37,6 +38,7 @@
       shell: "docker compose -f {{ compose_image }} pull"
 
     - name: Docker compose up
+      # Tutaj dzieje się magia: wstrzykujemy zmienne do środowiska powłoki
       shell: "docker compose --env-file {{ env_path }} -f {{ compose_image }} up -d --remove-orphans"
       environment:
         ASPNETCORE_URLS: "{{ aspnetcore_urls }}"
