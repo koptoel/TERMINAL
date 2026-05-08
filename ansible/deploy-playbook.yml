@@ -1,8 +1,9 @@
 - name: Deploy
   hosts: all
-  gather_facts: yes
+  gather_facts: yes  # Zostawiamy tak, aby pobrać HOME
   vars:
-    env_path: "{{ ansible_env.HOME }}/.env"
+    # Naprawiamy Deprecation Warning: używamy ansible_facts
+    env_path: "{{ ansible_facts['env']['HOME'] }}/.env"
 
   tasks:
     - name: Log into GitHub Container Registry
@@ -30,18 +31,28 @@
           OTEL_RESOURCE_ATTRIBUTES=hdx_token={{ hdx_token }},service.name=terminal-backend
         mode: '0600'
 
-    - name: Debug .env (wypisze tylko klucze, abyś widział czy nie ma spacji)
-      shell: "cut -d'=' -f1 {{ env_path }}"
-      register: keys_check
-
-    - debug:
-        var: keys_check.stdout_lines
-
     - name: Docker compose down
-      shell: "docker compose --env-file {{ env_path }} -f {{ compose_image }} down"
+      shell: "docker compose -f {{ compose_image }} down --remove-orphans"
 
     - name: Docker compose pull
-      shell: "docker compose --env-file {{ env_path }} -f {{ compose_image }} pull"
+      shell: "docker compose -f {{ compose_image }} pull"
 
     - name: Docker compose up
+      # Tutaj dzieje się magia: wstrzykujemy zmienne do środowiska powłoki
       shell: "docker compose --env-file {{ env_path }} -f {{ compose_image }} up -d --remove-orphans"
+      environment:
+        ASPNETCORE_URLS: "{{ aspnetcore_urls }}"
+        Administrator__Email: "{{ admin_email }}"
+        Administrator__Password: "{{ admin_password }}"
+        Jwt__Issuer: "{{ jwt_issuer }}"
+        Jwt__Audience: "{{ jwt_audience }}"
+        Jwt__SecretKey: "{{ jwt_key }}"
+        Jwt__AccessTokenExpirationMinutes: "{{ jwt_exp_min }}"
+        Jwt__RefreshTokenExpirationDays: "{{ jwt_exp_days }}"
+        Postgres__ConnectionString: "{{ postgres_conn }}"
+        POSTGRES_USER: "{{ postgres_user }}"
+        POSTGRES_PASSWORD: "{{ postgres_pass }}"
+        POSTGRES_DB: "{{ postgres_db }}"
+        OTEL_ENDPOINT: "{{ otel_endpoint }}"
+        OTEL_HEADERS: "{{ otel_headers }}"
+        OTEL_RESOURCE_ATTRIBUTES: "hdx_token={{ hdx_token }},service.name=terminal-backend"
