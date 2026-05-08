@@ -2,7 +2,6 @@
   hosts: all
   gather_facts: yes
   vars:
-    # Używamy poprawnej składni, aby pozbyć się ostrzeżenia [DEPRECATION WARNING]
     env_path: "{{ ansible_facts['env']['HOME'] }}/.env"
 
   tasks:
@@ -38,10 +37,11 @@
       shell: "docker compose -f {{ compose_image }} pull"
 
     - name: Docker compose up
-      # Używamy 'set -a' i 'source', aby na pewno załadować zmienne do procesu
-      # Dodajemy --ansi never, żeby Docker nie próbował być "interaktywny"
+      # Zamieniamy 'source' na '.' oraz wymuszamy /bin/bash
       shell: |
         set -a
-        source {{ env_path }}
+        . {{ env_path }}
         set +a
         docker compose --ansi never -f {{ compose_image }} up -d --remove-orphans
+      args:
+        executable: /bin/bash
