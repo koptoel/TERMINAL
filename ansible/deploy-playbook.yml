@@ -13,21 +13,21 @@
       copy:
         dest: "{{ env_path }}"
         content: |-
-          ASPNETCORE_URLS={{ aspnetcore_urls }}
-          Administrator__Email={{ admin_email }}
-          Administrator__Password={{ admin_password }}
-          Jwt__Issuer={{ jwt_issuer }}
-          Jwt__Audience={{ jwt_audience }}
-          Jwt__SecretKey={{ jwt_key }}
-          Jwt__AccessTokenExpirationMinutes={{ jwt_exp_min }}
-          Jwt__RefreshTokenExpirationDays={{ jwt_exp_days }}
-          Postgres__ConnectionString={{ postgres_conn }}
-          POSTGRES_USER={{ postgres_user }}
-          POSTGRES_PASSWORD={{ postgres_pass }}
-          POSTGRES_DB={{ postgres_db }}
-          OTEL_ENDPOINT={{ otel_endpoint }}
-          OTEL_HEADERS={{ otel_headers }}
-          OTEL_RESOURCE_ATTRIBUTES=hdx_token={{ hdx_token }},service.name=terminal-backend
+          ASPNETCORE_URLS="{{ aspnetcore_urls }}"
+          Administrator__Email="{{ admin_email }}"
+          Administrator__Password="{{ admin_password }}"
+          Jwt__Issuer="{{ jwt_issuer }}"
+          Jwt__Audience="{{ jwt_audience }}"
+          Jwt__SecretKey="{{ jwt_key }}"
+          Jwt__AccessTokenExpirationMinutes="{{ jwt_exp_min }}"
+          Jwt__RefreshTokenExpirationDays="{{ jwt_exp_days }}"
+          Postgres__ConnectionString="{{ postgres_conn }}"
+          POSTGRES_USER="{{ postgres_user }}"
+          POSTGRES_PASSWORD="{{ postgres_pass }}"
+          POSTGRES_DB="{{ postgres_db }}"
+          OTEL_ENDPOINT="{{ otel_endpoint }}"
+          OTEL_HEADERS="{{ otel_headers }}"
+          OTEL_RESOURCE_ATTRIBUTES="hdx_token={{ hdx_token }},service.name=terminal-backend"
         mode: '0600'
 
     - name: Docker compose down
@@ -37,11 +37,12 @@
       shell: "docker compose -f {{ compose_image }} pull"
 
     - name: Docker compose up
-      # Zamieniamy 'source' na '.' oraz wymuszamy /bin/bash
       shell: |
         set -a
-        . {{ env_path }}
+        [ -f {{ env_path }} ] && . {{ env_path }}
         set +a
-        docker compose --ansi never -f {{ compose_image }} up -d --remove-orphans
+        export COMPOSE_INTERACTIVE_NO_CLI=1
+        export COMPOSE_MENU=0
+        yes | docker compose --ansi never -f {{ compose_image }} up -d --remove-orphans
       args:
         executable: /bin/bash
