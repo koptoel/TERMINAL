@@ -1,15 +1,37 @@
-name: Build docker images
+name: Build and Deploy
 
 on:
   workflow_run:
     workflows: ["Create release from tag"]
-    types:
-      - completed
-
+    types: [completed]
   workflow_dispatch:
+    inputs:
+      skip_build:
+        description: 'Skip Docker build and push?'
+        type: boolean
+        default: false
 
 jobs:
+  # 1. Job to check for changes
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'src/**'
+              - 'Dockerfile'
+              - '.github/workflows/terminal-docker.yml'
+
+  # 2. Image build job (runs only if backend changed or triggered manually)
   build-and-push-images:
+    needs: changes
+    if: ${{ (needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') && inputs.skip_build == false }}
     permissions:
       contents: read
       packages: write
@@ -20,8 +42,15 @@ jobs:
       registry-username: ${{ github.actor }}
     secrets:
       registry-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # 3. Deployment job (runs if build succeeds OR is skipped)
   deploy:
-    needs: [build-and-push-images]
+    needs: [changes, build-and-push-images]
+    # Condition: Run if build succeeded OR was skipped (due to no code changes)
+    if: |
+      always() && 
+      (needs.build-and-push-images.result == 'success' || needs.build-and-push-images.result == 'skipped') &&
+      needs.changes.result == 'success'
     uses: ./.github/workflows/terminal-ansible.yml
     secrets:
       ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -34,12 +63,10 @@ jobs:
       ansible-user: ${{ secrets.ANSIBLE_USER }}
       deployment-targets: ${{ secrets.DEPLOYMENT_TARGETS }}
       registry-token: ${{ secrets.GITHUB_TOKEN }}
-      # db parameters
       postgres-connection-string: ${{ secrets.POSTGRES_CONNECTION_STRING }}
       postgres-user: ${{ secrets.POSTGRES_USER }}
       postgres-password: ${{ secrets.POSTGRES_PASSWORD }}
       postgres-db: ${{ secrets.POSTGRES_DB }}
-      # JWT parameters
       jwt-issuer: ${{ secrets.JWT_ISSUER }}
       jwt-audience: ${{ secrets.JWT_AUDIENCE }}
       jwt-secret-key: ${{ secrets.JWT_SECRET_KEY }}
