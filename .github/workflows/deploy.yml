@@ -46,7 +46,6 @@ jobs:
   # 3. Deployment job (runs if build succeeds OR is skipped)
   deploy:
     needs: [changes, build-and-push-images]
-    # Condition: Run if build succeeded OR was skipped (due to no code changes)
     if: |
       always() && 
       (needs.build-and-push-images.result == 'success' || needs.build-and-push-images.result == 'skipped') &&
@@ -54,21 +53,9 @@ jobs:
     uses: ./.github/workflows/terminal-ansible.yml
     secrets:
       ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      otel-endpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
-      otel-headers: "authorization=${{ secrets.HYPERDX_API_KEY }}"
-      hdx-token: ${{ secrets.HYPERDX_API_KEY }}
-      aspnetcore-urls: ${{ secrets.ASPNETCORE_URLS }}
-      admin-email: ${{ secrets.ADMIN_EMAIL }}
-      admin-password: ${{ secrets.ADMIN_PASSWORD }}
       ansible-user: ${{ secrets.ANSIBLE_USER }}
       deployment-targets: ${{ secrets.DEPLOYMENT_TARGETS }}
+      otel-endpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+      otel-headers: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+      otel-attributes: ${{ secrets.OTEL_RESOURCE_ATTRIBUTES }}
       registry-token: ${{ secrets.GITHUB_TOKEN }}
-      postgres-connection-string: ${{ secrets.POSTGRES_CONNECTION_STRING }}
-      postgres-user: ${{ secrets.POSTGRES_USER }}
-      postgres-password: ${{ secrets.POSTGRES_PASSWORD }}
-      postgres-db: ${{ secrets.POSTGRES_DB }}
-      jwt-issuer: ${{ secrets.JWT_ISSUER }}
-      jwt-audience: ${{ secrets.JWT_AUDIENCE }}
-      jwt-secret-key: ${{ secrets.JWT_SECRET_KEY }}
-      jwt-access-token-expiration: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION_MINUTES }}
-      jwt-refresh-token-expiration: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION_DAYS }}
