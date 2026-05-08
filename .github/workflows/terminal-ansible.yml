@@ -11,6 +11,14 @@ on:
         required: true
       otel-headers:
         required: true
+      aspnetcore-urls:
+        required: true
+      admin-email:
+        required: true
+      admin-password:
+        required: true
+      hdx-token:
+        required: true
 
 jobs:
   deploy:
@@ -74,6 +82,10 @@ jobs:
             --extra-vars "github_user=${{ github.actor }}" \
             --extra-vars "otel_endpoint=${{ secrets.otel-endpoint }}" \
             --extra-vars "otel_headers=${{ secrets.otel-headers }}" \
+            --extra-vars "hdx_token=${{ secrets.hdx-token }}" \
+            --extra-vars "aspnetcore_urls=${{ secrets.aspnetcore-urls }}" \
+            --extra-vars "admin_email=${{ secrets.admin-email }}" \
+            --extra-vars "admin_password=${{ secrets.admin-password }}" \
             --private-key private_key.pem -u ${{ secrets.ansible-user }}
 
       - name: Cleanup
