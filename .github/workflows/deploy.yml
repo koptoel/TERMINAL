@@ -25,7 +25,12 @@ jobs:
     uses: ./.github/workflows/terminal-ansible.yml
     secrets:
       ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      otel-endpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+      otel-headers: "authorization=${{ secrets.HYPERDX_API_KEY }}"
+      hdx-token: ${{ secrets.HYPERDX_API_KEY }}
+      aspnetcore-urls: ${{ secrets.ASPNETCORE_URLS }}
+      admin-email: ${{ secrets.ADMIN_EMAIL }}
+      admin-password: ${{ secrets.ADMIN_PASSWORD }}
       ansible-user: ${{ secrets.ANSIBLE_USER }}
       deployment-targets: ${{ secrets.DEPLOYMENT_TARGETS }}
-      otel-endpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
-      otel-headers: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+      registry-token: ${{ secrets.GITHUB_TOKEN }}
