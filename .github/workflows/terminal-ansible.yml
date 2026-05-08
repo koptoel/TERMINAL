@@ -1,6 +1,7 @@
 on:
   workflow_call:
     secrets:
+<<<<<<< HEAD
       ssh-private-key:  { required: true }
       ansible-user:  { required: true }
       deployment-targets:  { required: true }
@@ -20,6 +21,28 @@ on:
       jwt-secret-key: { required: true }
       jwt-access-token-expiration: { required: true }
       jwt-refresh-token-expiration: { required: true }
+=======
+      ssh-private-key:
+        required: true
+      ansible-user:
+        required: true
+      deployment-targets:
+        required: true
+      otel-endpoint:
+        required: true
+      otel-headers:
+        required: true
+      aspnetcore-urls:
+        required: true
+      admin-email:
+        required: true
+      admin-password:
+        required: true
+      hdx-token:
+        required: true
+      registry-token:
+        required: true
+>>>>>>> origin/main
 
 jobs:
   deploy:
