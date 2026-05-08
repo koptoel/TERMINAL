@@ -13,8 +13,17 @@
           ASPNETCORE_URLS={{ aspnetcore_urls }}
           Administrator__Email={{ admin_email }}
           Administrator__Password={{ admin_password }}
-          OTEL_EXPORTER_OTLP_ENDPOINT={{ otel_endpoint }}
-          OTEL_EXPORTER_OTLP_HEADERS={{ otel_headers }}
+          Jwt__Issuer={{ jwt_issuer }}
+          Jwt__Audience={{ jwt_audience }}
+          Jwt__SecretKey={{ jwt_key }}
+          Jwt__AccessTokenExpirationMinutes={{ jwt_exp_min }}
+          Jwt__RefreshTokenExpirationDays={{ jwt_exp_days }}
+          Postgres__ConnectionString={{ postgres_conn }}
+          POSTGRES_USER={{ postgres_user }}
+          POSTGRES_PASSWORD={{ postgres_pass }}
+          POSTGRES_DB={{ postgres_db }}
+          OTEL_ENDPOINT={{ otel_endpoint }}
+          OTEL_HEADERS={{ otel_headers }}
           OTEL_RESOURCE_ATTRIBUTES=hdx_token={{ hdx_token }},service.name=terminal-backend
         mode: '0600' 
 
