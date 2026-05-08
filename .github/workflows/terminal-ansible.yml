@@ -1,16 +1,16 @@
 on:
   workflow_call:
     secrets:
-      ssh-private-key:  { required: true }
-      ansible-user:  { required: true }
-      deployment-targets:  { required: true }
-      otel-endpoint:  { required: true }
-      otel-headers:  { required: true }
-      aspnetcore-urls:  { required: true }
+      ssh-private-key: { required: true }
+      ansible-user: { required: true }
+      deployment-targets: { required: true }
+      otel-endpoint: { required: true }
+      otel-headers: { required: true }
+      aspnetcore-urls: { required: true }
       admin-email: { required: true }
-      admin-password:  { required: true }
-      hdx-token:  { required: true }
-      registry-token:  { required: true }
+      admin-password: { required: true }
+      hdx-token: { required: true }
+      registry-token: { required: true }
       postgres-connection-string: { required: true }
       postgres-user: { required: true }
       postgres-password: { required: true }
@@ -69,14 +69,13 @@ jobs:
           # 1. Extract raw data from the secret
           RAW_TARGET="${{ secrets.deployment-targets }}"
           
-          # 2. Extract the IP address (assuming name:ip:port format)
-          # If multiple comma-separated hosts are provided, take the first one
+          # 2. Extract the IP address
           TARGET_IP=$(echo "$RAW_TARGET" | cut -d',' -f1 | cut -d':' -f2)
           
-          # 3. Pass the clean IP address to SSH
+          # 3. Prepare remote tmp dir
           ssh -o StrictHostKeyChecking=no -p 50022 -i private_key.pem ${{ secrets.ansible-user }}@$TARGET_IP "mkdir -p ~/.ansible_tmp && chmod 700 ~/.ansible_tmp"
           
-          # 4. Ansible uses the properly generated inventory.ini file
+          # 4. Run Playbook with all 19 secrets
           ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
             --extra-vars "compose_image=oci://ghcr.io/${{ github.repository_owner }}/terminal/compose:latest" \
             --extra-vars "registry_token=${{ secrets.registry-token }}" \
