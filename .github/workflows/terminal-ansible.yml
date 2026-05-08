@@ -6,24 +6,11 @@ on:
       deployment-targets: { required: true }
       otel-endpoint: { required: true }
       otel-headers: { required: true }
-      aspnetcore-urls: { required: true }
-      admin-email: { required: true }
-      admin-password: { required: true }
-      hdx-token: { required: true }
+      otel-attributes: { required: true }
       registry-token: { required: true }
-      postgres-connection-string: { required: true }
-      postgres-user: { required: true }
-      postgres-password: { required: true }
-      postgres-db: { required: true }
-      jwt-issuer: { required: true }
-      jwt-audience: { required: true }
-      jwt-secret-key: { required: true }
-      jwt-access-token-expiration: { required: true }
-      jwt-refresh-token-expiration: { required: true }
 
 jobs:
   deploy:
-    name: Deploy Ansible Playbook
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -49,17 +36,7 @@ jobs:
       - name: Run Ansible Playbook
         env:
           ANSIBLE_HOST_KEY_CHECKING: false
-          ANSIBLE_PIPELINING: "True"
-          ANSIBLE_SSH_ARGS: "-o ControlMaster=auto -o ControlPersist=60s"
         run: |
-          # 1. Extract the IP address
-          RAW_TARGET="${{ secrets.deployment-targets }}"
-          TARGET_IP=$(echo "$RAW_TARGET" | cut -d',' -f1 | cut -d':' -f2)
-          
-          # 2. Prepare remote tmp dir
-          ssh -o StrictHostKeyChecking=no -p 50022 -i private_key.pem ${{ secrets.ansible-user }}@$TARGET_IP "mkdir -p ~/.ansible_tmp && chmod 700 ~/.ansible_tmp"
-          
-          # 3. Run Playbook with all 19 secrets
           ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
             --extra-vars '{
               "compose_image": "oci://ghcr.io/${{ github.repository_owner }}/terminal/compose:latest",
@@ -67,19 +44,7 @@ jobs:
               "github_user": "${{ github.actor }}",
               "otel_endpoint": "${{ secrets.otel-endpoint }}",
               "otel_headers": "${{ secrets.otel-headers }}",
-              "hdx_token": "${{ secrets.hdx-token }}",
-              "aspnetcore_urls": "${{ secrets.aspnetcore-urls }}",
-              "admin_email": "${{ secrets.admin-email }}",
-              "admin_password": "${{ secrets.admin-password }}",
-              "postgres_conn": "${{ secrets.postgres-connection-string }}",
-              "postgres_user": "${{ secrets.postgres-user }}",
-              "postgres_pass": "${{ secrets.postgres-password }}",
-              "postgres_db": "${{ secrets.postgres-db }}",
-              "jwt_issuer": "${{ secrets.jwt-issuer }}",
-              "jwt_audience": "${{ secrets.jwt-audience }}",
-              "jwt_key": "${{ secrets.jwt-secret-key }}",
-              "jwt_exp_min": "${{ secrets.jwt-access-token-expiration }}",
-              "jwt_exp_days": "${{ secrets.jwt-refresh-token-expiration }}"
+              "otel_attributes": "${{ secrets.otel-attributes }}"
             }' \
             --private-key private_key.pem -u ${{ secrets.ansible-user }}
 
