@@ -13,7 +13,6 @@
       copy:
         dest: "{{ env_path }}"
         content: |-
-          # Server config
           ASPNETCORE_ENVIRONMENT=Development
           ASPNETCORE_URLS=http://*:5006
           Jwt__Issuer=terminal
@@ -21,28 +20,22 @@
           Jwt__SecretKey=[super-secret-key-for-development-purposes-only]
           Jwt__AccessTokenExpirationMinutes=15
           Jwt__RefreshTokenExpirationDays=30
-          Postgres__ConnectionString="Host=database;Database=terminal;Username=root;Password=root;Include Error Detail=true"
+          # UWAGA: Usunąłem cudzysłowy wewnątrz wartości
+          Postgres__ConnectionString=Host=terminal.postgres;Database=terminal;Username=root;Password=root;Include Error Detail=true
           Administrator__Email=admin@terminal.com
           Administrator__Password=password
-
-          # Postgres config
           POSTGRES_PASSWORD=root
           POSTGRES_DB=terminal
           POSTGRES_USER=root
-
-          # Telemetry config
-          OTEL_EXPORTER_OTLP_ENDPOINT="{{ otel_endpoint }}"
-          OTEL_EXPORTER_OTLP_HEADERS="authorization={{ otel_headers }}"
-          OTEL_RESOURCE_ATTRIBUTES="{{ otel_attributes }}"
+          OTEL_EXPORTER_OTLP_ENDPOINT={{ otel_endpoint }}
+          OTEL_EXPORTER_OTLP_HEADERS=authorization={{ otel_headers }}
+          OTEL_RESOURCE_ATTRIBUTES={{ otel_attributes }}
         mode: '0600'
 
     - name: Docker compose up
       shell: |
-        set -a
-        . {{ env_path }}
-        set +a
         export COMPOSE_INTERACTIVE_NO_CLI=1
-        docker compose -f {{ compose_image }} pull
-        docker compose --ansi never -f {{ compose_image }} up -d --remove-orphans
+        # Dodajemy --env-file z powrotem - to jest KLUCZ
+        docker compose --ansi never --env-file {{ env_path }} -f {{ compose_image }} up -d --remove-orphans
       args:
         executable: /bin/bash
