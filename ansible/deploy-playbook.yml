@@ -5,21 +5,29 @@
     env_path: "{{ ansible_facts['env']['HOME'] }}/.env"
 
   tasks:
+    - name: Log into GitHub Container Registry
+      # Przywracamy logowanie - bez tego mamy błąd 403 Forbidden przy pullu OCI
+      shell: "echo {{ registry_token }} | docker login ghcr.io -u {{ github_user }} --password-stdin"
+      no_log: true 
+
     - name: Generate .env file with ONLY telemetry
       copy:
         dest: "{{ env_path }}"
         content: |-
           OTEL_EXPORTER_OTLP_ENDPOINT="{{ otel_endpoint }}"
-          OTEL_EXPORTER_OTLP_HEADERS="{{ otel_headers }}"
+          # Tutaj doklejamy "authorization=", bo Twój sekret to sam Guid
+          OTEL_EXPORTER_OTLP_HEADERS="authorization={{ otel_headers }}"
           OTEL_RESOURCE_ATTRIBUTES="{{ otel_attributes }}"
         mode: '0600'
 
     - name: Docker compose up
       shell: |
         set -a
-        [ -f {{ env_path }} ] && . {{ env_path }}
+        . {{ env_path }}
         set +a
         export COMPOSE_INTERACTIVE_NO_CLI=1
+        # Najpierw pullujemy, żeby sprawdzić uprawnienia
+        docker compose -f {{ compose_image }} pull
         docker compose --ansi never -f {{ compose_image }} up -d --remove-orphans
       args:
         executable: /bin/bash
