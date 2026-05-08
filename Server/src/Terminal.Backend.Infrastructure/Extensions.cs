@@ -43,9 +43,9 @@ public static class Extensions
                 .WithTracing(tracing => tracing
                     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
                     .AddSource(serviceName)
-                    .AddAspNetCoreInstrumentation() // Œledzenie ¿¹dañ przychodz¹cych do API
-                    .AddHttpClientInstrumentation() // Œledzenie ¿¹dañ wychodz¹cych
-                    .AddEntityFrameworkCoreInstrumentation() // Œledzenie zapytañ do PostgreSQL!
+                    .AddAspNetCoreInstrumentation() // Track incoming API requests
+                    .AddHttpClientInstrumentation() // Track outgoing HTTP requests
+                    .AddEntityFrameworkCoreInstrumentation() // Track database queries (PostgreSQL)
                     .AddOtlpExporter(options =>
                     {
                         options.Endpoint = new Uri(hdxEndpoint);
@@ -53,7 +53,7 @@ public static class Extensions
                         options.Protocol = OtlpExportProtocol.HttpProtobuf;
                     }));
         }
-        // --- KONIEC: HyperDX ---
+        // --- END: HyperDX ---
         services.AddControllers();
         services.AddSingleton<ExceptionMiddleware>();
         services.AddHttpContextAccessor();
