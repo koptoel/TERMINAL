@@ -19,6 +19,8 @@ on:
         required: true
       hdx-token:
         required: true
+      registry-token:
+        required: true
 
 jobs:
   deploy:
