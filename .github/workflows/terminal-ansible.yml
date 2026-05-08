@@ -1,6 +1,27 @@
 on:
   workflow_call:
     secrets:
+<<<<<<< HEAD
+      ssh-private-key:  { required: true }
+      ansible-user:  { required: true }
+      deployment-targets:  { required: true }
+      otel-endpoint:  { required: true }
+      otel-headers:  { required: true }
+      aspnetcore-urls:  { required: true }
+      admin-email: { required: true }
+      admin-password:  { required: true }
+      hdx-token:  { required: true }
+      registry-token:  { required: true }
+      postgres-connection-string: { required: true }
+      postgres-user: { required: true }
+      postgres-password: { required: true }
+      postgres-db: { required: true }
+      jwt-issuer: { required: true }
+      jwt-audience: { required: true }
+      jwt-secret-key: { required: true }
+      jwt-access-token-expiration: { required: true }
+      jwt-refresh-token-expiration: { required: true }
+=======
       ssh-private-key:
         required: true
       ansible-user:
@@ -21,6 +42,7 @@ on:
         required: true
       registry-token:
         required: true
+>>>>>>> origin/main
 
 jobs:
   deploy:
@@ -80,7 +102,7 @@ jobs:
           # 4. Ansible uses the properly generated inventory.ini file
           ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
             --extra-vars "compose_image=oci://ghcr.io/${{ github.repository_owner }}/terminal/compose:latest" \
-            --extra-vars "registry_token=${{ secrets.GITHUB_TOKEN }}" \
+            --extra-vars "registry_token=${{ secrets.registry-token }}" \
             --extra-vars "github_user=${{ github.actor }}" \
             --extra-vars "otel_endpoint=${{ secrets.otel-endpoint }}" \
             --extra-vars "otel_headers=${{ secrets.otel-headers }}" \
@@ -88,6 +110,15 @@ jobs:
             --extra-vars "aspnetcore_urls=${{ secrets.aspnetcore-urls }}" \
             --extra-vars "admin_email=${{ secrets.admin-email }}" \
             --extra-vars "admin_password=${{ secrets.admin-password }}" \
+            --extra-vars "postgres_conn=${{ secrets.postgres-connection-string }}" \
+            --extra-vars "postgres_user=${{ secrets.postgres-user }}" \
+            --extra-vars "postgres_pass=${{ secrets.postgres-password }}" \
+            --extra-vars "postgres_db=${{ secrets.postgres-db }}" \
+            --extra-vars "jwt_issuer=${{ secrets.jwt-issuer }}" \
+            --extra-vars "jwt_audience=${{ secrets.jwt-audience }}" \
+            --extra-vars "jwt_key=${{ secrets.jwt-secret-key }}" \
+            --extra-vars "jwt_exp_min=${{ secrets.jwt-access-token-expiration }}" \
+            --extra-vars "jwt_exp_days=${{ secrets.jwt-refresh-token-expiration }}" \
             --private-key private_key.pem -u ${{ secrets.ansible-user }}
 
       - name: Cleanup

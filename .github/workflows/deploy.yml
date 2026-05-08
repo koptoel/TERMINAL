@@ -34,3 +34,14 @@ jobs:
       ansible-user: ${{ secrets.ANSIBLE_USER }}
       deployment-targets: ${{ secrets.DEPLOYMENT_TARGETS }}
       registry-token: ${{ secrets.GITHUB_TOKEN }}
+      # db parameters
+      postgres-connection-string: ${{ secrets.POSTGRES_CONNECTION_STRING }}
+      postgres-user: ${{ secrets.POSTGRES_USER }}
+      postgres-password: ${{ secrets.POSTGRES_PASSWORD }}
+      postgres-db: ${{ secrets.POSTGRES_DB }}
+      # JWT parameters
+      jwt-issuer: ${{ secrets.JWT_ISSUER }}
+      jwt-audience: ${{ secrets.JWT_AUDIENCE }}
+      jwt-secret-key: ${{ secrets.JWT_SECRET_KEY }}
+      jwt-access-token-expiration: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION_MINUTES }}
+      jwt-refresh-token-expiration: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION_DAYS }}
