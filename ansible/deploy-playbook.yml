@@ -17,7 +17,7 @@
     - name: Docker compose up
       shell: |
         set -a
-        . {{ env_path }}
+        [ -f {{ env_path }} ] && . {{ env_path }}
         set +a
         export COMPOSE_INTERACTIVE_NO_CLI=1
         docker compose --ansi never -f {{ compose_image }} up -d --remove-orphans
