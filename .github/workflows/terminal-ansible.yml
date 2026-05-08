@@ -43,58 +43,44 @@ jobs:
 
       - name: Install Ansible
         run: |
-          sudo apt update
-          sudo apt install -y ansible
-          
-      - name: Verify Secrets Presence
-        run: |
-          echo "Checking secret variables..."
-          if [ -n "${{ secrets.otel-endpoint }}" ]; then
-            echo "otel-endpoint is present (masked)"
-          else
-            echo "otel-endpoint is EMPTY!"
-          fi
+          python3 -m pip install --user ansible-core
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Run Ansible Playbook
         env:
-          ANSIBLE_USER: ${{ secrets.ansible-user }}
           ANSIBLE_HOST_KEY_CHECKING: false
-          TMPDIR: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
-          TEMP: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
-          TMP: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
-          ANSIBLE_REMOTE_TMP: "/home/${{ secrets.ansible-user }}/.ansible_tmp"
           ANSIBLE_PIPELINING: "True"
-          
+          ANSIBLE_SSH_ARGS: "-o ControlMaster=auto -o ControlPersist=60s"
         run: |
-          # 1. Extract raw data from the secret
+          # 1. Extract the IP address
           RAW_TARGET="${{ secrets.deployment-targets }}"
-          
-          # 2. Extract the IP address
           TARGET_IP=$(echo "$RAW_TARGET" | cut -d',' -f1 | cut -d':' -f2)
           
-          # 3. Prepare remote tmp dir
+          # 2. Prepare remote tmp dir
           ssh -o StrictHostKeyChecking=no -p 50022 -i private_key.pem ${{ secrets.ansible-user }}@$TARGET_IP "mkdir -p ~/.ansible_tmp && chmod 700 ~/.ansible_tmp"
           
-          # 4. Run Playbook with all 19 secrets
+          # 3. Run Playbook with all 19 secrets
           ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
-            --extra-vars "compose_image=oci://ghcr.io/${{ github.repository_owner }}/terminal/compose:latest" \
-            --extra-vars "registry_token=${{ secrets.registry-token }}" \
-            --extra-vars "github_user=${{ github.actor }}" \
-            --extra-vars "otel_endpoint=${{ secrets.otel-endpoint }}" \
-            --extra-vars "otel_headers=${{ secrets.otel-headers }}" \
-            --extra-vars "hdx_token=${{ secrets.hdx-token }}" \
-            --extra-vars "aspnetcore_urls=${{ secrets.aspnetcore-urls }}" \
-            --extra-vars "admin_email=${{ secrets.admin-email }}" \
-            --extra-vars "admin_password=${{ secrets.admin-password }}" \
-            --extra-vars "postgres_conn=${{ secrets.postgres-connection-string }}" \
-            --extra-vars "postgres_user=${{ secrets.postgres-user }}" \
-            --extra-vars "postgres_pass=${{ secrets.postgres-password }}" \
-            --extra-vars "postgres_db=${{ secrets.postgres-db }}" \
-            --extra-vars "jwt_issuer=${{ secrets.jwt-issuer }}" \
-            --extra-vars "jwt_audience=${{ secrets.jwt-audience }}" \
-            --extra-vars "jwt_key=${{ secrets.jwt-secret-key }}" \
-            --extra-vars "jwt_exp_min=${{ secrets.jwt-access-token-expiration }}" \
-            --extra-vars "jwt_exp_days=${{ secrets.jwt-refresh-token-expiration }}" \
+            --extra-vars '{
+              "compose_image": "oci://ghcr.io/${{ github.repository_owner }}/terminal/compose:latest",
+              "registry_token": "${{ secrets.registry-token }}",
+              "github_user": "${{ github.actor }}",
+              "otel_endpoint": "${{ secrets.otel-endpoint }}",
+              "otel_headers": "${{ secrets.otel-headers }}",
+              "hdx_token": "${{ secrets.hdx-token }}",
+              "aspnetcore_urls": "${{ secrets.aspnetcore-urls }}",
+              "admin_email": "${{ secrets.admin-email }}",
+              "admin_password": "${{ secrets.admin-password }}",
+              "postgres_conn": "${{ secrets.postgres-connection-string }}",
+              "postgres_user": "${{ secrets.postgres-user }}",
+              "postgres_pass": "${{ secrets.postgres-password }}",
+              "postgres_db": "${{ secrets.postgres-db }}",
+              "jwt_issuer": "${{ secrets.jwt-issuer }}",
+              "jwt_audience": "${{ secrets.jwt-audience }}",
+              "jwt_key": "${{ secrets.jwt-secret-key }}",
+              "jwt_exp_min": "${{ secrets.jwt-access-token-expiration }}",
+              "jwt_exp_days": "${{ secrets.jwt-refresh-token-expiration }}"
+            }' \
             --private-key private_key.pem -u ${{ secrets.ansible-user }}
 
       - name: Cleanup
