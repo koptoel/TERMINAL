@@ -30,7 +30,7 @@
           POSTGRES_DB=terminal
           POSTGRES_USER=root
 
-          # Telemetry config (Nowe!)
+          # Telemetry config
           OTEL_EXPORTER_OTLP_ENDPOINT="{{ otel_endpoint }}"
           OTEL_EXPORTER_OTLP_HEADERS="authorization={{ otel_headers }}"
           OTEL_RESOURCE_ATTRIBUTES="{{ otel_attributes }}"
