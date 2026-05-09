@@ -1,6 +1,3 @@
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Exporter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -11,6 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using Terminal.Backend.Application.Abstractions;
 using Terminal.Backend.Core.Entities;
@@ -32,27 +33,24 @@ public static class Extensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // --- START: HyperDX & OpenTelemetry ---
-        var serviceName = configuration["HyperDX:ServiceName"] ?? "terminal-backend";
-        var hdxEndpoint = configuration["HyperDX:Endpoint"];
-        var hdxApiKey = configuration["HyperDX:ApiKey"];
+        // --- START: HyperDX & OpenTelemetry (Convention over Configuration) ---
 
-        if (!string.IsNullOrEmpty(hdxEndpoint) && !string.IsNullOrEmpty(hdxApiKey))
-        {
-            services.AddOpenTelemetry()
-                .WithTracing(tracing => tracing
-                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
-                    .AddSource(serviceName)
-                    .AddAspNetCoreInstrumentation() // Track incoming API requests
-                    .AddHttpClientInstrumentation() // Track outgoing HTTP requests
-                    .AddEntityFrameworkCoreInstrumentation() // Track database queries (PostgreSQL)
-                    .AddOtlpExporter(options =>
-                    {
-                        options.Endpoint = new Uri(hdxEndpoint);
-                        options.Headers = $"Authorization={hdxApiKey}";
-                        options.Protocol = OtlpExportProtocol.HttpProtobuf;
-                    }));
-        }
+        // SDK OpenTelemetry will automatically read the following environment variables:
+        // OTEL_EXPORTER_OTLP_ENDPOINT
+        // OTEL_EXPORTER_OTLP_HEADERS
+        // OTEL_EXPORTER_OTLP_PROTOCOL
+        // OTEL_SERVICE_NAME
+
+        services.AddOpenTelemetry()
+            .WithTracing(tracing => tracing
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddEntityFrameworkCoreInstrumentation()
+                .AddOtlpExporter())
+            .WithMetrics(metrics => metrics
+                .AddAspNetCoreInstrumentation()
+                .AddOtlpExporter());
+
         // --- END: HyperDX ---
         services.AddControllers();
         services.AddSingleton<ExceptionMiddleware>();
