@@ -25,6 +25,7 @@
           POSTGRES_DB="terminal"
           POSTGRES_USER="db_admin_terminal"
           POSTGRES_PASSWORD="{{ postgres_pass }}"
+          # Kluczowe: cała wartość w cudzysłowie, aby Bash nie uciął jej na średniku
           Postgres__ConnectionString="Host=database;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true"
           OTEL_ENDPOINT="{{ otel_endpoint }}"
           OTEL_HEADERS="authorization={{ otel_headers }}"
