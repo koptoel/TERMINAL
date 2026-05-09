@@ -47,7 +47,7 @@ jobs:
           RAW_TARGET="${{ secrets.deployment-targets }}"
           TARGET_IP=$(echo "$RAW_TARGET" | cut -d',' -f1 | cut -d':' -f2)
           
-       - name: Run Ansible Playbook
+      - name: Run Ansible Playbook
         env:
           REPO_OWNER: ${{ github.repository_owner }}
         run: |
