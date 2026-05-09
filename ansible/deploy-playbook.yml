@@ -13,11 +13,10 @@
         export ASPNETCORE_URLS="http://*:5006"
         export Jwt__SecretKey="{{ jwt_secret }}"
         
-        # Używamy zmiennych z GitHuba, z bezpiecznym fallbackiem na 'root'
         export POSTGRES_DB="terminal"
         export POSTGRES_USER="{{ postgres_user | default('root') }}"
         export POSTGRES_PASSWORD="{{ postgres_pass | default('root') }}"
-        
+
         export Postgres__ConnectionString="Host=database;Database=terminal;Username={{ postgres_user | default('root') }};Password={{ postgres_pass | default('root') }};Include Error Detail=true"
         
         export OTEL_ENDPOINT="{{ otel_endpoint }}"
