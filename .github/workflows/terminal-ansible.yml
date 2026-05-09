@@ -11,6 +11,7 @@ on:
       JWT_SECRET_KEY: { required: true }
       ADMIN_EMAIL: { required: true }
       ADMIN_PASSWORD: { required: true }
+      POSTGRES_USER: { required: true }
       POSTGRES_PASSWORD: { required: true }
 
 jobs:
@@ -46,19 +47,22 @@ jobs:
           RAW_TARGET="${{ secrets.deployment-targets }}"
           TARGET_IP=$(echo "$RAW_TARGET" | cut -d',' -f1 | cut -d':' -f2)
           
+      - name: Run Ansible Playbook
+        run: |
           ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
-            --extra-vars "{
-              \"compose_image\": \"oci://ghcr.io/$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')/terminal/compose:latest\",
-              \"registry_token\": \"${{ secrets.registry-token }}\",
-              \"github_user\": \"${{ github.actor }}\",
-              \"otel_endpoint\": \"${{ secrets.otel-endpoint }}\",
-              \"otel_headers\": \"${{ secrets.otel-headers }}\",
-              \"otel_attributes\": \"${{ secrets.otel-attributes }}\",
-              \"jwt_secret\": \"${{ secrets.JWT_SECRET_KEY }}\",
-              \"admin_email\": \"${{ secrets.ADMIN_EMAIL }}\",
-              \"admin_password\": \"${{ secrets.ADMIN_PASSWORD }}\",
-              \"postgres_pass\": \"${{ secrets.POSTGRES_PASSWORD }}\"
-            }" \
+            --extra-vars '{
+              "compose_image": "oci://ghcr.io/$(echo ${{ github.repository_owner }} | tr "[:upper:]" "[:lower:]")/terminal/compose:latest",
+              "registry_token": "${{ secrets.registry-token }}",
+              "github_user": "${{ github.actor }}",
+              "otel_endpoint": "${{ secrets.otel-endpoint }}",
+              "otel_headers": "${{ secrets.otel-headers }}",
+              "otel_attributes": "${{ secrets.otel-attributes }}",
+              "jwt_secret": "${{ secrets.JWT_SECRET_KEY }}",
+              "admin_email": "${{ secrets.ADMIN_EMAIL }}",
+              "admin_password": "${{ secrets.ADMIN_PASSWORD }}",
+              "postgres_user": "${{ secrets.POSTGRES_USER }}",
+              "postgres_pass": "${{ secrets.POSTGRES_PASSWORD }}"
+            }' \
             --private-key private_key.pem -u ${{ secrets.ansible-user }}
 
       - name: Cleanup
