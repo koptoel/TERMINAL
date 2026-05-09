@@ -9,33 +9,41 @@
       shell: "echo {{ registry_token }} | docker login ghcr.io -u {{ github_user }} --password-stdin"
       no_log: true 
 
-    - name: Generate full .env file
+    - name: Generate production .env file
       copy:
         dest: "{{ env_path }}"
         content: |-
+          # Server config 
           ASPNETCORE_ENVIRONMENT=Development
           ASPNETCORE_URLS=http://*:5006
+          Jwt__AccessTokenExpirationMinutes=60
+          Jwt__RefreshTokenExpirationDays=7
           Jwt__Issuer=terminal
           Jwt__Audience=terminal-clients
-          Jwt__SecretKey=[super-secret-key-for-development-purposes-only]
-          Jwt__AccessTokenExpirationMinutes=15
-          Jwt__RefreshTokenExpirationDays=30
-          # UWAGA: Usunąłem cudzysłowy wewnątrz wartości
-          Postgres__ConnectionString=Host=terminal.postgres;Database=terminal;Username=root;Password=root;Include Error Detail=true
-          Administrator__Email=admin@terminal.com
-          Administrator__Password=password
-          POSTGRES_PASSWORD=root
+          
+          # Server config (GitHub Secrets)
+          Jwt__SecretKey={{ jwt_secret }}
+          Administrator__Email={{ admin_email }}
+          Administrator__Password={{ admin_password }}
+
+          # Postgres config
           POSTGRES_DB=terminal
-          POSTGRES_USER=root
+          POSTGRES_USER=db_admin_terminal
+          POSTGRES_PASSWORD={{ postgres_pass }}
+          # Kluczowe: używamy nazwy kontenera 'terminal.postgres' jako hosta
+          Postgres__ConnectionString="Host=terminal.postgres;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true"
+
+          # Telemetry config
           OTEL_EXPORTER_OTLP_ENDPOINT={{ otel_endpoint }}
-          OTEL_EXPORTER_OTLP_HEADERS=authorization={{ otel_headers }}
-          OTEL_RESOURCE_ATTRIBUTES={{ otel_attributes }}
+          OTEL_EXPORTER_OTLP_HEADERS="authorization={{ otel_headers }}"
+          OTEL_RESOURCE_ATTRIBUTES="{{ otel_attributes }}"
         mode: '0600'
 
     - name: Docker compose up
       shell: |
         export COMPOSE_INTERACTIVE_NO_CLI=1
-        # Dodajemy --env-file z powrotem - to jest KLUCZ
         docker compose --ansi never --env-file {{ env_path }} -f {{ compose_image }} up -d --remove-orphans
       args:
         executable: /bin/bash
+      async: 300
+      poll: 5
