@@ -13,36 +13,39 @@
       copy:
         dest: "{{ env_path }}"
         content: |-
-          ASPNETCORE_ENVIRONMENT=Development
-          ASPNETCORE_URLS=http://*:5006
-          Jwt__AccessTokenExpirationMinutes=60
-          Jwt__RefreshTokenExpirationDays=7
-          Jwt__Issuer=terminal
-          Jwt__Audience=terminal-clients
-          Jwt__SecretKey={{ jwt_secret }}
-          Administrator__Email={{ admin_email }}
-          Administrator__Password={{ admin_password }}
-          POSTGRES_DB=terminal
-          POSTGRES_USER=db_admin_terminal
-          POSTGRES_PASSWORD={{ postgres_pass }}
-          Postgres__ConnectionString=Host=terminal.postgres;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true
-          OTEL_ENDPOINT={{ otel_endpoint }}
-          OTEL_HEADERS=authorization={{ otel_headers }}
-          OTEL_RESOURCE_ATTRIBUTES={{ otel_attributes }}
+          ASPNETCORE_ENVIRONMENT="Development"
+          ASPNETCORE_URLS="http://*:5006"
+          Jwt__AccessTokenExpirationMinutes="60"
+          Jwt__RefreshTokenExpirationDays="7"
+          Jwt__Issuer="terminal"
+          Jwt__Audience="terminal-clients"
+          Jwt__SecretKey="{{ jwt_secret }}"
+          Administrator__Email="{{ admin_email }}"
+          Administrator__Password="{{ admin_password }}"
+          POSTGRES_DB="terminal"
+          POSTGRES_USER="db_admin_terminal"
+          POSTGRES_PASSWORD="{{ postgres_pass }}"
+          # Host=database (zgodnie z Twoim działającym setupem) + cudzysłowy
+          Postgres__ConnectionString="Host=database;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true"
+          OTEL_ENDPOINT="{{ otel_endpoint }}"
+          OTEL_HEADERS="authorization={{ otel_headers }}"
+          OTEL_RESOURCE_ATTRIBUTES="{{ otel_attributes }}"
         mode: '0600'
-
-    - name: Docker compose pull
-      shell: "docker compose --env-file {{ env_path }} -f {{ compose_image }} pull"
-      register: pull_res
-      until: pull_res is succeeded
-      retries: 3
-      delay: 5
 
     - name: Docker compose up
       shell: |
         export COMPOSE_INTERACTIVE_NO_CLI=1
         export COMPOSE_MENU=0
-        # Pipe 'yes' to handle any "Do you want to proceed?" prompts
         yes | docker compose --ansi never --env-file {{ env_path }} -f {{ compose_image }} up -d --remove-orphans
-      args:
-        executable: /bin/bash
+      register: compose_up
+      ignore_errors: yes
+
+    - name: Show container logs on failure
+      shell: "docker logs terminal.server --tail 50"
+      when: compose_up.rc != 0
+      register: server_logs
+
+    - name: Fail if docker compose failed
+      fail:
+        msg: "Deployment failed! Server logs: {{ server_logs.stdout }}"
+      when: compose_up.rc != 0
