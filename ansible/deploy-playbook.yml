@@ -11,26 +11,25 @@
       shell: |
         export ASPNETCORE_ENVIRONMENT="Production"
         export ASPNETCORE_URLS="http://*:5006"
-        export Jwt__SecretKey="{{ jwt_secret }}"
-        export Postgres__ConnectionString="Host=database;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true"
-        export POSTGRES_PASSWORD="{{ postgres_pass }}"
+        export Jwt__SecretKey="{{ jwt_secret }}"       
         export POSTGRES_DB="terminal"
-        export POSTGRES_USER="db_admin_terminal"
+        export POSTGRES_USER="{{ postgres_user }}"
+        export POSTGRES_PASSWORD="{{ postgres_pass }}"     
+        export Postgres__ConnectionString="Host=database;Database=terminal;Username={{ postgres_user }};Password={{ postgres_pass }};Include Error Detail=true"   
         export OTEL_ENDPOINT="{{ otel_endpoint }}"
         export OTEL_HEADERS="authorization={{ otel_headers }}"
-        export OTEL_RESOURCE_ATTRIBUTES="{{ otel_attributes }}"
-        
+        export OTEL_RESOURCE_ATTRIBUTES="{{ otel_attributes }}"       
         export COMPOSE_INTERACTIVE_NO_CLI=1
-        export COMPOSE_MENU=0
-        
+        export COMPOSE_MENU=0   
+        docker compose -f {{ compose_image }} pull
         yes | docker compose --ansi never -f {{ compose_image }} up -d --remove-orphans
       args:
         executable: /bin/bash
       register: compose_up
       ignore_errors: yes
 
-    - name: Debug logs if failed
-      shell: "docker logs terminal.server --tail 50"
+    - name: Show logs on failure
+      shell: "docker logs terminal.server --tail 100"
       when: compose_up.rc != 0
       register: server_logs
 
