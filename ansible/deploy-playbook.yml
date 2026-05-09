@@ -13,10 +13,12 @@
         export ASPNETCORE_URLS="http://*:5006"
         export Jwt__SecretKey="{{ jwt_secret }}"
         
+        # Używamy zmiennych z GitHuba, z bezpiecznym fallbackiem na 'root'
         export POSTGRES_DB="terminal"
-        export POSTGRES_USER="{{ postgres_user }}"
-        export POSTGRES_PASSWORD="{{ postgres_pass }}"
-        export Postgres__ConnectionString="Host=database;Database=terminal;Username={{ postgres_user }};Password={{ postgres_pass }};Include Error Detail=true"
+        export POSTGRES_USER="{{ postgres_user | default('root') }}"
+        export POSTGRES_PASSWORD="{{ postgres_pass | default('root') }}"
+        
+        export Postgres__ConnectionString="Host=database;Database=terminal;Username={{ postgres_user | default('root') }};Password={{ postgres_pass | default('root') }};Include Error Detail=true"
         
         export OTEL_ENDPOINT="{{ otel_endpoint }}"
         export OTEL_HEADERS="authorization={{ otel_headers }}"
@@ -34,10 +36,10 @@
 
     - name: Show logs on failure
       shell: "docker logs terminal.server --tail 100"
-      when: compose_up.rc != 0
+      when: compose_up is failed or (compose_up.rc is defined and compose_up.rc != 0)
       register: server_logs
 
     - name: Final check
       fail:
-        msg: "Deployment failed! App logs: {{ server_logs.stdout }}"
-      when: compose_up.rc != 0
+        msg: "Deployment failed! App logs: {{ server_logs.stdout | default('No logs available') }}"
+      when: compose_up is failed or (compose_up.rc is defined and compose_up.rc != 0)
