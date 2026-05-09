@@ -25,30 +25,24 @@
           POSTGRES_DB=terminal
           POSTGRES_USER=db_admin_terminal
           POSTGRES_PASSWORD={{ postgres_pass }}
-          Postgres__ConnectionString=Host=database;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true
+          Postgres__ConnectionString=Host=terminal.postgres;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true
           OTEL_ENDPOINT={{ otel_endpoint }}
           OTEL_HEADERS=authorization={{ otel_headers }}
           OTEL_RESOURCE_ATTRIBUTES={{ otel_attributes }}
         mode: '0600'
 
     - name: Docker compose pull
-      shell: |
-        set -a
-        . {{ env_path }}
-        set +a
-        docker compose -f {{ compose_image }} pull
+      shell: "docker compose --env-file {{ env_path }} -f {{ compose_image }} pull"
       register: pull_res
+      until: pull_res is succeeded
       retries: 3
       delay: 5
-      until: pull_res is succeeded
 
     - name: Docker compose up
       shell: |
-        set -a
-        . {{ env_path }}
-        set +a
         export COMPOSE_INTERACTIVE_NO_CLI=1
         export COMPOSE_MENU=0
-        docker compose --ansi never -f {{ compose_image }} up -d --remove-orphans
+        # Pipe 'yes' to handle any "Do you want to proceed?" prompts
+        yes | docker compose --ansi never --env-file {{ env_path }} -f {{ compose_image }} up -d --remove-orphans
       args:
         executable: /bin/bash
