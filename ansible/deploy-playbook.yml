@@ -13,46 +13,42 @@
       copy:
         dest: "{{ env_path }}"
         content: |-
-          ASPNETCORE_ENVIRONMENT="Development"
-          ASPNETCORE_URLS="http://*:5006"
-          Jwt__AccessTokenExpirationMinutes="60"
-          Jwt__RefreshTokenExpirationDays="7"
-          Jwt__Issuer="terminal"
-          Jwt__Audience="terminal-clients"
-          Jwt__SecretKey="{{ jwt_secret }}"
-          Administrator__Email="{{ admin_email }}"
-          Administrator__Password="{{ admin_password }}"
-          POSTGRES_DB="terminal"
-          POSTGRES_USER="db_admin_terminal"
-          POSTGRES_PASSWORD="{{ postgres_pass }}"
-          # Kluczowe: cała wartość w cudzysłowie, aby Bash nie uciął jej na średniku
-          Postgres__ConnectionString="Host=database;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true"
-          OTEL_ENDPOINT="{{ otel_endpoint }}"
-          OTEL_HEADERS="authorization={{ otel_headers }}"
-          OTEL_RESOURCE_ATTRIBUTES="{{ otel_attributes }}"
+          ASPNETCORE_ENVIRONMENT=Production
+          ASPNETCORE_URLS=http://*:5006
+          Jwt__AccessTokenExpirationMinutes=60
+          Jwt__RefreshTokenExpirationDays=7
+          Jwt__Issuer=terminal
+          Jwt__Audience=terminal-clients
+          Jwt__SecretKey={{ jwt_secret }}
+          Administrator__Email={{ admin_email }}
+          Administrator__Password={{ admin_password }}
+          POSTGRES_DB=terminal
+          POSTGRES_USER=db_admin_terminal
+          POSTGRES_PASSWORD={{ postgres_pass }}
+          # Usunięto cudzysłowy wewnątrz pliku, Docker Compose sam je obsłuży
+          Postgres__ConnectionString=Host=database;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true
+          OTEL_ENDPOINT={{ otel_endpoint }}
+          OTEL_HEADERS=authorization={{ otel_headers }}
+          OTEL_RESOURCE_ATTRIBUTES=hdx_token={{ hdx_token }},service.name=terminal-backend
         mode: '0600'
 
     - name: Docker compose up
       shell: |
-        set -a
-        # Używamy cudzysłowu przy source, żeby bezpiecznie wczytać plik
-        source "{{ env_path }}"
-        set +a
         export COMPOSE_INTERACTIVE_NO_CLI=1
         export COMPOSE_MENU=0
-        # Dodajemy --env-file dodatkowo jako zabezpieczenie
-        yes | docker compose --ansi never --env-file "{{ env_path }}" -f {{ compose_image }} up -d --remove-orphans
+        # Używamy tylko --env-file. To najbezpieczniejsza metoda przy OCI.
+        yes | docker compose --ansi never --env-file {{ env_path }} -f {{ compose_image }} up -d --remove-orphans
       args:
         executable: /bin/bash
       register: compose_up
       ignore_errors: yes
 
-    - name: Show container logs on failure
+    - name: Show logs if unhealthy
       shell: "docker logs terminal.server --tail 50"
       when: compose_up.rc != 0
       register: server_logs
 
-    - name: Fail if docker compose failed
+    - name: Fail with diagnostics
       fail:
-        msg: "Deployment failed! Server logs: {{ server_logs.stdout }}"
+        msg: "Server is unhealthy! Logs: {{ server_logs.stdout }}"
       when: compose_up.rc != 0
