@@ -49,11 +49,9 @@ jobs:
           
       - name: Run Ansible Playbook
         env:
-          # Wyliczamy nazwę obrazu wcześniej, żeby nie psuć JSON-a w extra-vars
           REPO_OWNER: ${{ github.repository_owner }}
         run: |
-          IMAGE_NAME="oci://ghcr.io/$(echo $REPO_OWNER | tr '[:upper:]' '[:lower:]')/terminal/compose:latest"
-          
+          IMAGE_NAME="oci://ghcr.io/$(echo $REPO_OWNER | tr '[:upper:]' '[:lower:]')/terminal/compose:latest"         
           ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
             --extra-vars "{
               \"compose_image\": \"$IMAGE_NAME\",
