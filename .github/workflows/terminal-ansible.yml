@@ -1,7 +1,6 @@
 on:
   workflow_call:
     secrets:
-      # Tutaj musimy wymienić WSZYSTKIE 11 sekretów, które przekazujesz z deploy.yml
       ssh-private-key: { required: true }
       ansible-user: { required: true }
       deployment-targets: { required: true }
@@ -9,7 +8,6 @@ on:
       otel-headers: { required: true }
       otel-attributes: { required: true }
       registry-token: { required: true }
-      # Te cztery poniżej są kluczowe, żeby dane dotarły do Ansible:
       JWT_SECRET_KEY: { required: true }
       ADMIN_EMAIL: { required: true }
       ADMIN_PASSWORD: { required: true }
@@ -43,7 +41,6 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: false
           ANSIBLE_PIPELINING: "True"
-          # SSH ARGS są teraz kompletne i bezpieczne dla GitHub Runnera
           ANSIBLE_SSH_ARGS: "-o StrictHostKeyChecking=no -o ControlMaster=auto -o ControlPersist=600s -o ServerAliveInterval=15 -o ServerAliveCountMax=10"
         run: |
           RAW_TARGET="${{ secrets.deployment-targets }}"

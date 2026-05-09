@@ -23,8 +23,9 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_ENDPOINT}
       - OTEL_EXPORTER_OTLP_HEADERS=${OTEL_HEADERS}
       - OTEL_SERVICE_NAME=terminal-backend
+      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES}
     healthcheck:
-      test: ["CMD", "curl", "-f", "server:5006/api/ping"]
+      test: ["CMD", "curl", "-f", "http://localhost:5006/api/ping"]
       interval: 5s
       timeout: 5s
       retries: 5
