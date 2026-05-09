@@ -25,18 +25,16 @@
           POSTGRES_DB=terminal
           POSTGRES_USER=db_admin_terminal
           POSTGRES_PASSWORD={{ postgres_pass }}
-          # Usunięto cudzysłowy wewnątrz pliku, Docker Compose sam je obsłuży
           Postgres__ConnectionString=Host=database;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true
           OTEL_ENDPOINT={{ otel_endpoint }}
           OTEL_HEADERS=authorization={{ otel_headers }}
-          OTEL_RESOURCE_ATTRIBUTES=hdx_token={{ hdx_token }},service.name=terminal-backend
+          OTEL_RESOURCE_ATTRIBUTES={{ otel_attributes }}
         mode: '0600'
 
     - name: Docker compose up
       shell: |
         export COMPOSE_INTERACTIVE_NO_CLI=1
         export COMPOSE_MENU=0
-        # Używamy tylko --env-file. To najbezpieczniejsza metoda przy OCI.
         yes | docker compose --ansi never --env-file {{ env_path }} -f {{ compose_image }} up -d --remove-orphans
       args:
         executable: /bin/bash
