@@ -13,7 +13,7 @@
       copy:
         dest: "{{ env_path }}"
         content: |-
-          # Server config 
+          # Server config (Stałe z Ansible)
           ASPNETCORE_ENVIRONMENT=Development
           ASPNETCORE_URLS=http://*:5006
           Jwt__AccessTokenExpirationMinutes=60
@@ -21,7 +21,7 @@
           Jwt__Issuer=terminal
           Jwt__Audience=terminal-clients
           
-          # Server config (GitHub Secrets)
+          # Server config (Sekrety z GitHub)
           Jwt__SecretKey={{ jwt_secret }}
           Administrator__Email={{ admin_email }}
           Administrator__Password={{ admin_password }}
