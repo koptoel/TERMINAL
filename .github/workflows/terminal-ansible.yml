@@ -47,9 +47,8 @@ jobs:
           RAW_TARGET="${{ secrets.deployment-targets }}"
           TARGET_IP=$(echo "$RAW_TARGET" | cut -d',' -f1 | cut -d':' -f2)
           
-      - name: Run Ansible Playbook
+       - name: Run Ansible Playbook
         env:
-          # Wyliczamy nazwę obrazu wcześniej, żeby nie psuć JSON-a w extra-vars
           REPO_OWNER: ${{ github.repository_owner }}
         run: |
           IMAGE_NAME="oci://ghcr.io/$(echo $REPO_OWNER | tr '[:upper:]' '[:lower:]')/terminal/compose:latest"
@@ -69,7 +68,6 @@ jobs:
               \"postgres_pass\": \"${{ secrets.POSTGRES_PASSWORD }}\"
             }" \
             --private-key private_key.pem -u ${{ secrets.ansible-user }}
-
       - name: Cleanup
         if: always()
         run: rm -f private_key.pem
