@@ -9,7 +9,6 @@
 
     - name: Docker compose up
       shell: |
-        # Tutaj wstrzykujemy zmienne bez pośrednictwa pliku .env
         export ASPNETCORE_ENVIRONMENT="Production"
         export ASPNETCORE_URLS="http://*:5006"
         export Jwt__SecretKey="{{ jwt_secret }}"
@@ -24,7 +23,6 @@
         export COMPOSE_INTERACTIVE_NO_CLI=1
         export COMPOSE_MENU=0
         
-        # Docker przejmie te zmienne z sesji shella
         yes | docker compose --ansi never -f {{ compose_image }} up -d --remove-orphans
       args:
         executable: /bin/bash
