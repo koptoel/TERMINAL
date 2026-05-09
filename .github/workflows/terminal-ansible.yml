@@ -50,6 +50,7 @@ jobs:
       - name: Run Ansible Playbook
         env:
           REPO_OWNER: ${{ github.repository_owner }}
+          ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
           IMAGE_NAME="oci://ghcr.io/$(echo $REPO_OWNER | tr '[:upper:]' '[:lower:]')/terminal/compose:latest"
           
