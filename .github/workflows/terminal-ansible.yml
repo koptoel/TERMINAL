@@ -51,7 +51,8 @@ jobs:
         env:
           REPO_OWNER: ${{ github.repository_owner }}
         run: |
-          IMAGE_NAME="oci://ghcr.io/$(echo $REPO_OWNER | tr '[:upper:]' '[:lower:]')/terminal/compose:latest"         
+          IMAGE_NAME="oci://ghcr.io/$(echo $REPO_OWNER | tr '[:upper:]' '[:lower:]')/terminal/compose:latest"
+          
           ansible-playbook -i inventory.ini ansible/deploy-playbook.yml \
             --extra-vars "{
               \"compose_image\": \"$IMAGE_NAME\",
@@ -67,7 +68,6 @@ jobs:
               \"postgres_pass\": \"${{ secrets.POSTGRES_PASSWORD }}\"
             }" \
             --private-key private_key.pem -u ${{ secrets.ansible-user }}
-
       - name: Cleanup
         if: always()
         run: rm -f private_key.pem
