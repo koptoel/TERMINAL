@@ -25,7 +25,7 @@
           POSTGRES_DB="terminal"
           POSTGRES_USER="db_admin_terminal"
           POSTGRES_PASSWORD="{{ postgres_pass }}"
-          # Host=database (zgodnie z Twoim działającym setupem) + cudzysłowy
+          # Kluczowe: cała wartość w cudzysłowie, aby Bash nie uciął jej na średniku
           Postgres__ConnectionString="Host=database;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true"
           OTEL_ENDPOINT="{{ otel_endpoint }}"
           OTEL_HEADERS="authorization={{ otel_headers }}"
@@ -34,9 +34,16 @@
 
     - name: Docker compose up
       shell: |
+        set -a
+        # Używamy cudzysłowu przy source, żeby bezpiecznie wczytać plik
+        source "{{ env_path }}"
+        set +a
         export COMPOSE_INTERACTIVE_NO_CLI=1
         export COMPOSE_MENU=0
-        yes | docker compose --ansi never --env-file {{ env_path }} -f {{ compose_image }} up -d --remove-orphans
+        # Dodajemy --env-file dodatkowo jako zabezpieczenie
+        yes | docker compose --ansi never --env-file "{{ env_path }}" -f {{ compose_image }} up -d --remove-orphans
+      args:
+        executable: /bin/bash
       register: compose_up
       ignore_errors: yes
 
