@@ -1,52 +1,42 @@
 - name: Deploy
   hosts: all
   gather_facts: yes
-  vars:
-    env_path: "{{ ansible_facts['env']['HOME'] }}/.env"
 
   tasks:
     - name: Log into GitHub Container Registry
       shell: "echo {{ registry_token }} | docker login ghcr.io -u {{ github_user }} --password-stdin"
       no_log: true 
 
-    - name: Generate production .env file
-      copy:
-        dest: "{{ env_path }}"
-        content: |-
-          ASPNETCORE_ENVIRONMENT=Production
-          ASPNETCORE_URLS=http://*:5006
-          Jwt__AccessTokenExpirationMinutes=60
-          Jwt__RefreshTokenExpirationDays=7
-          Jwt__Issuer=terminal
-          Jwt__Audience=terminal-clients
-          Jwt__SecretKey={{ jwt_secret }}
-          Administrator__Email={{ admin_email }}
-          Administrator__Password={{ admin_password }}
-          POSTGRES_DB=terminal
-          POSTGRES_USER=db_admin_terminal
-          POSTGRES_PASSWORD={{ postgres_pass }}
-          Postgres__ConnectionString=Host=database;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true
-          OTEL_ENDPOINT={{ otel_endpoint }}
-          OTEL_HEADERS=authorization={{ otel_headers }}
-          OTEL_RESOURCE_ATTRIBUTES={{ otel_attributes }}
-        mode: '0600'
-
     - name: Docker compose up
       shell: |
+        # Tutaj wstrzykujemy zmienne bez pośrednictwa pliku .env
+        export ASPNETCORE_ENVIRONMENT="Production"
+        export ASPNETCORE_URLS="http://*:5006"
+        export Jwt__SecretKey="{{ jwt_secret }}"
+        export Postgres__ConnectionString="Host=database;Database=terminal;Username=db_admin_terminal;Password={{ postgres_pass }};Include Error Detail=true"
+        export POSTGRES_PASSWORD="{{ postgres_pass }}"
+        export POSTGRES_DB="terminal"
+        export POSTGRES_USER="db_admin_terminal"
+        export OTEL_ENDPOINT="{{ otel_endpoint }}"
+        export OTEL_HEADERS="authorization={{ otel_headers }}"
+        export OTEL_RESOURCE_ATTRIBUTES="{{ otel_attributes }}"
+        
         export COMPOSE_INTERACTIVE_NO_CLI=1
         export COMPOSE_MENU=0
-        yes | docker compose --ansi never --env-file {{ env_path }} -f {{ compose_image }} up -d --remove-orphans
+        
+        # Docker przejmie te zmienne z sesji shella
+        yes | docker compose --ansi never -f {{ compose_image }} up -d --remove-orphans
       args:
         executable: /bin/bash
       register: compose_up
       ignore_errors: yes
 
-    - name: Show logs if unhealthy
+    - name: Debug logs if failed
       shell: "docker logs terminal.server --tail 50"
       when: compose_up.rc != 0
       register: server_logs
 
-    - name: Fail with diagnostics
+    - name: Final check
       fail:
-        msg: "Server is unhealthy! Logs: {{ server_logs.stdout }}"
+        msg: "Deployment failed! App logs: {{ server_logs.stdout }}"
       when: compose_up.rc != 0
