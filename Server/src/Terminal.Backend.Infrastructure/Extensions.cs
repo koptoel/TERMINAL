@@ -12,6 +12,7 @@ using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using OpenTelemetry.Logs;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using Terminal.Backend.Application.Abstractions;
 using Terminal.Backend.Core.Entities;
@@ -40,7 +41,6 @@ public static class Extensions
         // OTEL_EXPORTER_OTLP_HEADERS
         // OTEL_EXPORTER_OTLP_PROTOCOL
         // OTEL_SERVICE_NAME
-
         services.AddOpenTelemetry()
             .WithTracing(tracing => tracing
                 .AddAspNetCoreInstrumentation()
@@ -49,8 +49,14 @@ public static class Extensions
                 .AddOtlpExporter())
             .WithMetrics(metrics => metrics
                 .AddAspNetCoreInstrumentation()
-                .AddOtlpExporter());
-
+                .AddOtlpExporter())
+            .WithLogging(logging => logging
+            .AddOtlpExporter(),
+            options =>
+            {
+                options.IncludeFormattedMessage = true;
+                options.IncludeScopes = true;
+            });
         // --- END: HyperDX ---
         services.AddControllers();
         services.AddSingleton<ExceptionMiddleware>();
