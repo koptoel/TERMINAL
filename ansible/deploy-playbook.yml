@@ -9,26 +9,33 @@
 
     - name: Docker compose up
       shell: |
-        export ASPNETCORE_ENVIRONMENT="Production"
-        export ASPNETCORE_URLS="http://*:5006"
-        export Jwt__SecretKey="{{ jwt_secret }}"
-        
-        export POSTGRES_DB="terminal"
-        export POSTGRES_USER="{{ postgres_user | default('root') }}"
-        export POSTGRES_PASSWORD="{{ postgres_pass | default('root') }}"
-
-        export Postgres__ConnectionString="Host=database;Database=terminal;Username={{ postgres_user | default('root') }};Password={{ postgres_pass | default('root') }};Include Error Detail=true"
-        
-        export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
-        export OTEL_ENDPOINT="{{ otel_endpoint }}"
-        export OTEL_HEADERS="authorization={{ otel_headers }}"
-        export OTEL_RESOURCE_ATTRIBUTES="{{ otel_attributes }}"
-        
-        export COMPOSE_INTERACTIVE_NO_CLI=1
-        export COMPOSE_MENU=0
-        
         docker compose -f {{ compose_image }} pull
         yes | docker compose --ansi never -f {{ compose_image }} up -d --remove-orphans
+      environment:
+        ASPNETCORE_ENVIRONMENT: "Production"
+        ASPNETCORE_URLS: "http://*:5006"
+        Jwt__SecretKey: "{{ jwt_secret }}"
+        Jwt__Issuer: "{{ jwt_issuer | default('TerminalServer') }}"
+        Jwt__Audience: "{{ jwt_audience | default('TerminalClient') }}"
+        Jwt__AccessTokenExpirationMinutes: "60"
+        Jwt__RefreshTokenExpirationDays: "7"
+        
+        Administrator__Email: "{{ admin_email }}"
+        Administrator__Password: "{{ admin_password }}"
+        POSTGRES_DB: "terminal"
+        POSTGRES_USER: "{{ postgres_user }}"
+        POSTGRES_PASSWORD: "{{ postgres_pass }}"
+        Postgres__ConnectionString: "Host=database;Database=terminal;Username={{ postgres_user }};Password={{ postgres_pass }};Include Error Detail=true"
+        
+        OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+        OTEL_EXPORTER_OTLP_ENDPOINT: "{{ otel_endpoint }}"
+        OTEL_EXPORTER_OTLP_HEADERS: "authorization={{ otel_headers }}"
+        OTEL_RESOURCE_ATTRIBUTES: "{{ otel_attributes }}"
+        OTEL_SERVICE_NAME: "terminal-backend"
+        
+        COMPOSE_INTERACTIVE_NO_CLI: "1"
+        COMPOSE_MENU: "0"
+
       args:
         executable: /bin/bash
       register: compose_up

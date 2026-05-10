@@ -20,10 +20,14 @@ services:
       - Postgres__ConnectionString=${Postgres__ConnectionString}
       - Administrator__Email=${Administrator__Email}
       - Administrator__Password=${Administrator__Password}
-      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_ENDPOINT}
-      - OTEL_EXPORTER_OTLP_HEADERS=${OTEL_HEADERS}
-      - OTEL_SERVICE_NAME=terminal-backend
+
+      # --- OpenTelemetry (Ustandaryzowane nazwy) ---
+      - OTEL_EXPORTER_OTLP_PROTOCOL=${OTEL_EXPORTER_OTLP_PROTOCOL}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
+      - OTEL_EXPORTER_OTLP_HEADERS=${OTEL_EXPORTER_OTLP_HEADERS}
       - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES}
+      - OTEL_SERVICE_NAME=terminal-backend
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5006/api/ping"]
       interval: 5s
