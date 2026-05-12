@@ -13,7 +13,10 @@ public static class Extensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssembly(AssemblyReference.Assembly); });
+        services.AddMediatR(cfg => {
+            cfg.RegisterServicesFromAssembly(AssemblyReference.Assembly);
+            cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+        });
 
         services.AddOptions<InvitationOptions>()
             .BindConfiguration("Invitations")
