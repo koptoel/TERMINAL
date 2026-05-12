@@ -26,7 +26,7 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
 
         var stopwatch = Stopwatch.StartNew();
         try
-        {
+{
             var response = await next();
             stopwatch.Stop();
 
@@ -38,7 +38,7 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
             return response;
         }
         catch (Exception ex)
-        {
+    {
             stopwatch.Stop();
             _logger.LogError(
                 ex,
