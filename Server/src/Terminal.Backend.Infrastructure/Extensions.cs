@@ -2,15 +2,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Logs;
 using Swashbuckle.AspNetCore.SwaggerUI;
@@ -35,12 +32,20 @@ public static class Extensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         // --- START: HyperDX & OpenTelemetry (Convention over Configuration) ---
-
         // SDK OpenTelemetry will automatically read the following environment variables:
         // OTEL_EXPORTER_OTLP_ENDPOINT
         // OTEL_EXPORTER_OTLP_HEADERS
         // OTEL_EXPORTER_OTLP_PROTOCOL
         // OTEL_SERVICE_NAME
+        services.AddLogging(logging =>
+        {
+            logging.AddOpenTelemetry(options =>
+            {
+                options.IncludeFormattedMessage = true;
+                options.IncludeScopes = true;
+                options.AddOtlpExporter();
+            });
+        });
         services.AddOpenTelemetry()
             .WithTracing(tracing => tracing
                 .AddAspNetCoreInstrumentation()
@@ -49,14 +54,7 @@ public static class Extensions
                 .AddOtlpExporter())
             .WithMetrics(metrics => metrics
                 .AddAspNetCoreInstrumentation()
-                .AddOtlpExporter())
-            .WithLogging(logging => logging
-            .AddOtlpExporter(),
-            options =>
-            {
-                options.IncludeFormattedMessage = true;
-                options.IncludeScopes = true;
-            });
+                .AddOtlpExporter());
         // --- END: HyperDX ---
         services.AddControllers();
         services.AddSingleton<ExceptionMiddleware>();
