@@ -16,6 +16,8 @@ using Terminal.Backend.Application.Queries.Users.Invitations;
 using Terminal.Backend.Core.Entities;
 using Terminal.Backend.Core.Exceptions;
 using Permission = Terminal.Backend.Core.Enums.Permission;
+using Terminal.Backend.Core.Abstractions.Repositories;
+
 
 namespace Terminal.Backend.Api.Modules;
 
@@ -165,6 +167,77 @@ public static class UsersModule
             }).RequireAuthorization(Role.Registered)
             .WithTags(SwaggerSetup.UserTag);
         
+        app.MapPost(ApiBaseRoute + "/2fa/setup", async (
+        ClaimsPrincipal claims,
+        ISender sender,
+        IUserRepository userRepository,
+        CancellationToken ct) =>
+        {
+            var id = claims.GetUserId();
+            if (id is null) return Results.BadRequest();
+
+            var user = await userRepository.GetAsync(id.Value, ct);
+            if (user is null) return Results.NotFound();
+
+            var secret = OtpNet.Base32Encoding.ToString(OtpNet.KeyGeneration.GenerateRandomKey(20));
+            user.SetTwoFactorSecret(secret);
+            await userRepository.UpdateAsync(user, ct);
+
+            var otpauthUrl =
+                $"otpauth://totp/TERMINAL:{user.Email.Value}?secret={secret}&issuer=TERMINAL";
+
+            return Results.Ok(new
+            {
+                secret,
+                otpauthUrl
+            });
+        })
+        .RequireAuthorization(Role.Registered)
+        .WithTags(SwaggerSetup.UserTag);
+
+        app.MapPost(ApiBaseRoute + "/2fa/enable", async (
+        ClaimsPrincipal claims,
+        [FromBody] EnableTwoFactorRequest request,
+        IUserRepository userRepository,
+        CancellationToken ct) =>
+        {
+            var id = claims.GetUserId();
+            if (id is null) return Results.BadRequest();
+
+            var user = await userRepository.GetAsync(id.Value, ct);
+            if (user is null) return Results.NotFound();
+
+            if (string.IsNullOrWhiteSpace(user.TwoFactorSecret))
+                return Results.BadRequest();
+
+            var secretBytes = OtpNet.Base32Encoding.ToBytes(user.TwoFactorSecret);
+            var totp = new OtpNet.Totp(secretBytes);
+
+            var isValid = totp.VerifyTotp(
+                request.Code,
+                out _,
+                new OtpNet.VerificationWindow(previous: 1, future: 1)
+            );
+
+            if (!isValid)
+            {
+                return Results.BadRequest(new
+                {
+                    Email = user.Email.Value,
+                    Secret = user.TwoFactorSecret,
+                    Code = request.Code
+                });
+            }
+
+            user.EnableTwoFactor();
+            await userRepository.UpdateAsync(user, ct);
+
+            return Results.Ok();
+        })
+        .RequireAuthorization(Role.Registered)
+        .WithTags(SwaggerSetup.UserTag);
+
+
         app.MapGet(ApiBaseRoute + "/me", async (
                 ClaimsPrincipal claims,
                 ISender sender,
@@ -221,3 +294,5 @@ public static class UsersModule
             .WithTags(SwaggerSetup.UserTag);
     }
 }
+
+public sealed record EnableTwoFactorRequest(string Code);

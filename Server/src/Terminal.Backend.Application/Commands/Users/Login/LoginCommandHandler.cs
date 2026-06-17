@@ -3,6 +3,7 @@ using Terminal.Backend.Application.Abstractions;
 using Terminal.Backend.Application.Exceptions;
 using Terminal.Backend.Core.Abstractions.Repositories;
 using Terminal.Backend.Core.Entities;
+using OtpNet;
 
 namespace Terminal.Backend.Application.Commands.Users.Login;
 
@@ -27,7 +28,8 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, Authen
 
     public async Task<AuthenticatedResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var (email, password) = request;
+        var email = request.Email;
+        var password = request.Password;
 
         var user = await _userRepository.GetUserByEmailAsync(email, cancellationToken);
         if (user is null)
@@ -43,6 +45,33 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, Authen
         if (!_passwordHasher.Verify(password, user.Password))
         {
             throw new InvalidCredentialsException();
+        }
+
+        if (user.TwoFactorEnabled)
+        {
+            if (string.IsNullOrWhiteSpace(request.TwoFactorCode))
+            {
+                return new AuthenticatedResponse(null, null, true);
+            }
+
+            if (string.IsNullOrWhiteSpace(user.TwoFactorSecret))
+            {
+                throw new InvalidCredentialsException();
+            }
+
+            var secretBytes = Base32Encoding.ToBytes(user.TwoFactorSecret);
+            var totp = new Totp(secretBytes);
+
+            var isValid = totp.VerifyTotp(
+                request.TwoFactorCode,
+                out _,
+                new VerificationWindow(previous: 1, future: 1)
+            );
+
+            if (!isValid)
+            {
+                throw new InvalidCredentialsException();
+            }
         }
  
         var accessToken = _jwtProvider.GenerateJwt(user);
