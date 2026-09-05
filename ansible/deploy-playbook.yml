@@ -89,7 +89,14 @@
       ignore_errors: yes
 
     - name: Pull backup image
-      shell: "docker compose -p terminaldev --env-file {{ app_dir }}/.env -f {{ compose_image }} pull backup"
+      shell: "docker compose -p terminalprod --env-file {{ app_dir }}/.env -f {{ compose_image }} pull backup"
+
+    - name: Enable systemd user lingering
+      become: true
+      ansible.builtin.command:
+        cmd: "loginctl enable-linger {{ ansible_user_id }}"
+      args:
+        creates: "/var/lib/systemd/linger/{{ ansible_user_id }}"
 
     - name: Create user systemd directory
       file:
