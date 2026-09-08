@@ -5,6 +5,3 @@ Description=Terminal database backup service
 Type=oneshot
 WorkingDirectory=/home/anon/dev/TERMINAL
 ExecStart=/usr/bin/docker compose -p terminalprod -f compose.yaml -f compose.prod.yaml run --rm --no-deps backup
-
-[Install]
-WantedBy=default.target

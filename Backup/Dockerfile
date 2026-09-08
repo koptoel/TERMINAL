@@ -4,7 +4,6 @@ RUN apk add --no-cache \
     restic \
     rclone \
     openssh-client \
-    bash \
     ca-certificates \
     postgresql-client
 
@@ -12,4 +11,4 @@ RUN mkdir -p /auth /backups && chmod 700 /auth /backups
 
 COPY backup.sh backup.sh 
 
-ENTRYPOINT ["/bin/bash", "backup.sh"]
+ENTRYPOINT ["/bin/sh", "backup.sh"]
