@@ -31,8 +31,7 @@
           POSTGRES_USER={{ postgres_user }}
           POSTGRES_PASSWORD={{ postgres_pass }}
           RESTIC_PASSWORD={{ restic_password }}
-          RESTIC_GDRIVE_ROOT_FOLDER_ID={{ restic_gdrive_folder_id }}
-          RESTIC_GDRIVE_SERVICE_ACCOUNT_FILE={{ app_dir }}/gdrive-sa.json
+          RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID={{ rclone_config_gdrive_root_folder_id }}
           RESTIC_SFTP_HOST={{ backup_sftp_host }}
           RESTIC_SFTP_USER={{ backup_sftp_user }}
           RESTIC_SFTP_PORT={{ backup_sftp_port | default('22') }}
@@ -89,7 +88,7 @@
       ignore_errors: yes
 
     - name: Pull backup image
-      shell: "docker compose -p terminaldev --env-file {{ app_dir }}/.env -f {{ compose_image }} pull backup"
+      shell: "docker compose -p terminalprod --env-file {{ app_dir }}/.env -f {{ compose_image }} pull backup"
 
     - name: Create user systemd directory
       file:
