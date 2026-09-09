@@ -19,7 +19,7 @@ on:
       POSTGRES_USER: { required: true }
       POSTGRES_PASSWORD: { required: true }
       RESTIC_PASSWORD: { required: true }
-      RCLONE_CONFIG_GDRIVE_TEAM_DRIVE: { required: true }
+      RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID: { required: true }
       GDRIVE_SERVICE_ACCOUNT_JSON_B64: { required: true }
       BACKUP_SFTP_HOST: { required: true }
       BACKUP_SFTP_USER: { required: true }
@@ -72,7 +72,7 @@ jobs:
               \"postgres_user\": \"${{ secrets.POSTGRES_USER }}\",
               \"postgres_pass\": \"${{ secrets.POSTGRES_PASSWORD }}\",
               \"restic_password\": \"${{ secrets.RESTIC_PASSWORD }}\",
-              \"rclone_config_gdrive_team_drive\": \"${{ secrets.RCLONE_CONFIG_GDRIVE_TEAM_DRIVE }}\",
+              \"rclone_config_gdrive_root_folder_id\": \"${{ secrets.RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID }}\",
               \"gdrive_service_account_json_b64\": \"${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON_B64 }}\",
               \"backup_sftp_host\": \"${{ secrets.BACKUP_SFTP_HOST }}\",
               \"backup_sftp_user\": \"${{ secrets.BACKUP_SFTP_USER }}\",

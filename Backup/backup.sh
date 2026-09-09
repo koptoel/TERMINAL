@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-GDRIVE_REPO="rclone:gdrive:terminal-backup"
+GDRIVE_REPO="rclone:gdrive:"
 [ "$#" -eq 0 ] || exec restic -r "$GDRIVE_REPO" "$@"
 
 echo "[BACKUP] [GDRIVE] Starting backup..."

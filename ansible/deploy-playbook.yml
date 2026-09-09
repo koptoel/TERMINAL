@@ -31,7 +31,7 @@
           POSTGRES_USER={{ postgres_user }}
           POSTGRES_PASSWORD={{ postgres_pass }}
           RESTIC_PASSWORD={{ restic_password }}
-          RCLONE_CONFIG_GDRIVE_TEAM_DRIVE={{ rclone_config_gdrive_team_drive }}
+          RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID={{ rclone_config_gdrive_root_folder_id }}
           RESTIC_SFTP_HOST={{ backup_sftp_host }}
           RESTIC_SFTP_USER={{ backup_sftp_user }}
           RESTIC_SFTP_PORT={{ backup_sftp_port | default('22') }}
