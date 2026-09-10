@@ -17,7 +17,8 @@ using Terminal.Backend.Core.Entities;
 using Terminal.Backend.Core.Exceptions;
 using Permission = Terminal.Backend.Core.Enums.Permission;
 using Terminal.Backend.Core.Abstractions.Repositories;
-
+using Terminal.Backend.Application.Commands.Users.TwoFactor.Setup;
+using Terminal.Backend.Application.Commands.Users.TwoFactor.Enable;
 
 namespace Terminal.Backend.Api.Modules;
 
@@ -166,76 +167,52 @@ public static class UsersModule
                 return Results.Ok();
             }).RequireAuthorization(Role.Registered)
             .WithTags(SwaggerSetup.UserTag);
-        
-        app.MapPost(ApiBaseRoute + "/2fa/setup", async (
-        ClaimsPrincipal claims,
-        ISender sender,
-        IUserRepository userRepository,
-        CancellationToken ct) =>
-        {
-            var id = claims.GetUserId();
-            if (id is null) return Results.BadRequest();
+        //ddddddddddddddddddd
+       app.MapPost(ApiBaseRoute + "/2fa/setup", async (
+    ClaimsPrincipal claims,
+    ISender sender,
+    CancellationToken ct) =>
+{
+    var id = claims.GetUserId();
 
-            var user = await userRepository.GetAsync(id.Value, ct);
-            if (user is null) return Results.NotFound();
+    if (id is null)
+    {
+        return Results.BadRequest();
+    }
 
-            var secret = OtpNet.Base32Encoding.ToString(OtpNet.KeyGeneration.GenerateRandomKey(20));
-            user.SetTwoFactorSecret(secret);
-            await userRepository.UpdateAsync(user, ct);
+    var command = new SetupTwoFactorCommand(id.Value);
+    var response = await sender.Send(command, ct);
 
-            var otpauthUrl =
-                $"otpauth://totp/TERMINAL:{user.Email.Value}?secret={secret}&issuer=TERMINAL";
-
-            return Results.Ok(new
-            {
-                secret,
-                otpauthUrl
-            });
-        })
-        .RequireAuthorization(Role.Registered)
-        .WithTags(SwaggerSetup.UserTag);
-
+    return Results.Ok(response);
+})
+.RequireAuthorization(Role.Registered)
+.WithTags(SwaggerSetup.UserTag);
+        //ddddddddddddddddddd
         app.MapPost(ApiBaseRoute + "/2fa/enable", async (
-        ClaimsPrincipal claims,
-        [FromBody] EnableTwoFactorRequest request,
-        IUserRepository userRepository,
-        CancellationToken ct) =>
-        {
-            var id = claims.GetUserId();
-            if (id is null) return Results.BadRequest();
+    ClaimsPrincipal claims,
+    [FromBody] EnableTwoFactorRequest request,
+    ISender sender,
+    CancellationToken ct) =>
+{
+    var id = claims.GetUserId();
 
-            var user = await userRepository.GetAsync(id.Value, ct);
-            if (user is null) return Results.NotFound();
+    if (id is null)
+    {
+        return Results.BadRequest();
+    }
 
-            if (string.IsNullOrWhiteSpace(user.TwoFactorSecret))
-                return Results.BadRequest();
+    var command = new EnableTwoFactorCommand(
+        id.Value,
+        request.Code);
 
-            var secretBytes = OtpNet.Base32Encoding.ToBytes(user.TwoFactorSecret);
-            var totp = new OtpNet.Totp(secretBytes);
+    var enabled = await sender.Send(command, ct);
 
-            var isValid = totp.VerifyTotp(
-                request.Code,
-                out _,
-                new OtpNet.VerificationWindow(previous: 1, future: 1)
-            );
-
-            if (!isValid)
-            {
-                return Results.BadRequest(new
-                {
-                    Email = user.Email.Value,
-                    Secret = user.TwoFactorSecret,
-                    Code = request.Code
-                });
-            }
-
-            user.EnableTwoFactor();
-            await userRepository.UpdateAsync(user, ct);
-
-            return Results.Ok();
-        })
-        .RequireAuthorization(Role.Registered)
-        .WithTags(SwaggerSetup.UserTag);
+    return enabled
+        ? Results.Ok()
+        : Results.BadRequest();
+})
+.RequireAuthorization(Role.Registered)
+.WithTags(SwaggerSetup.UserTag);
 
 
         app.MapGet(ApiBaseRoute + "/me", async (

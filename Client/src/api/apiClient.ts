@@ -38,6 +38,7 @@ apiClient.interceptors.response.use(
       error.response?.status !== 401 ||
       originalRequest._retry ||
       originalRequest.url.includes("/users/refresh") ||
+      originalRequest.url.includes("/users/login") ||
       (sessionStorage.getItem("token") === null &&
         localStorage.getItem("refresh-token") === null)
     ) {
@@ -51,6 +52,10 @@ apiClient.interceptors.response.use(
         refreshToken: localStorage.getItem("refresh-token"),
       });
       const { token, refreshToken } = response.data;
+
+      if (!token || !refreshToken) {
+        throw new Error("Refresh response did not contain tokens");
+      }
 
       sessionStorage.setItem("token", token);
       localStorage.setItem("refresh-token", refreshToken);

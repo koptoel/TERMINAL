@@ -1,6 +1,7 @@
 import {
   ArrowRightEndOnRectangleIcon,
   Cog8ToothIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/16/solid";
 import useUserData from "@hooks/users/useUserData.ts";
 import { toastPromise } from "@utils/toast.utils.tsx";
@@ -10,6 +11,7 @@ import { useLogoutMutation } from "@hooks/users/auth/useLogoutMutation.ts";
 import useIsOnline from "@hooks/useIsOnline";
 import clsx from "clsx";
 import ChangePasswordDialog from "@components/users/ChangePasswordDialog.tsx";
+import TwoFactorDialog from "@components/users/TwoFactorDialog.tsx";
 
 function getUserRoleDisplayValue(role: string): string {
   if (role === "Administrator") return "Administrator";
@@ -46,6 +48,7 @@ const SidebarUserProfile = () => {
   const { data, status } = useUserData();
   const navigate = useNavigate();
   const [isDialogOpen, setDialogOpen] = useState(false);
+  const [isTwoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
   const logoutMutation = useLogoutMutation();
   const online = useIsOnline();
 
@@ -84,9 +87,20 @@ const SidebarUserProfile = () => {
             {getUserRoleDisplayValue(data?.role)}
           </p>
         </div>
-        <Cog8ToothIcon
+        <ShieldCheckIcon
+          title="Two-factor authentication"
           className="h-8 w-6 ml-auto md:group-hover:visible md:invisible text-gray-800 hover:bg-gray-300 rounded"
-          onClick={() => setDialogOpen(true)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setTwoFactorDialogOpen(true);
+          }}
+        />
+        <Cog8ToothIcon
+          className="h-8 w-6 md:group-hover:visible md:invisible text-gray-800 hover:bg-gray-300 rounded"
+          onClick={(e) => {
+            e.stopPropagation();
+            setDialogOpen(true);
+          }}
         />
         <ArrowRightEndOnRectangleIcon
           className="h-8 w-6 ml-auto md:group-hover:visible md:invisible text-gray-800 hover:bg-gray-300 rounded"
@@ -96,6 +110,10 @@ const SidebarUserProfile = () => {
           }}
         />
       </div>
+      <TwoFactorDialog
+        open={isTwoFactorDialogOpen}
+        setOpen={setTwoFactorDialogOpen}
+      />
       <ChangePasswordDialog
         open={isDialogOpen}
         setOpen={setDialogOpen}
