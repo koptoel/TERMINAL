@@ -9,6 +9,8 @@ public sealed class User
     public Password Password { get; private set; }
     public Role Role { get; private set; }
     public bool Activated { get; private set; }
+    public bool TwoFactorEnabled { get; private set; }
+    public string? TwoFactorSecret { get; private set; }
 
     private User(UserId id, Email email, Password password, bool activated)
     {
@@ -43,5 +45,21 @@ public sealed class User
     public void UpdateEmail(Email email)
     {
         Email = email;
+    }
+
+    public void SetTwoFactorSecret(string secret)
+    {
+         TwoFactorSecret = secret;
+    }
+
+    public void EnableTwoFactor()
+    {
+        TwoFactorEnabled = true;
+    }
+
+    public void DisableTwoFactor()
+    {
+        TwoFactorEnabled = false;
+        TwoFactorSecret = null;
     }
 }

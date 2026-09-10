@@ -16,6 +16,9 @@ using Terminal.Backend.Application.Queries.Users.Invitations;
 using Terminal.Backend.Core.Entities;
 using Terminal.Backend.Core.Exceptions;
 using Permission = Terminal.Backend.Core.Enums.Permission;
+using Terminal.Backend.Core.Abstractions.Repositories;
+using Terminal.Backend.Application.Commands.Users.TwoFactor.Setup;
+using Terminal.Backend.Application.Commands.Users.TwoFactor.Enable;
 
 namespace Terminal.Backend.Api.Modules;
 
@@ -164,7 +167,54 @@ public static class UsersModule
                 return Results.Ok();
             }).RequireAuthorization(Role.Registered)
             .WithTags(SwaggerSetup.UserTag);
-        
+        //ddddddddddddddddddd
+       app.MapPost(ApiBaseRoute + "/2fa/setup", async (
+    ClaimsPrincipal claims,
+    ISender sender,
+    CancellationToken ct) =>
+{
+    var id = claims.GetUserId();
+
+    if (id is null)
+    {
+        return Results.BadRequest();
+    }
+
+    var command = new SetupTwoFactorCommand(id.Value);
+    var response = await sender.Send(command, ct);
+
+    return Results.Ok(response);
+})
+.RequireAuthorization(Role.Registered)
+.WithTags(SwaggerSetup.UserTag);
+        //ddddddddddddddddddd
+        app.MapPost(ApiBaseRoute + "/2fa/enable", async (
+    ClaimsPrincipal claims,
+    [FromBody] EnableTwoFactorRequest request,
+    ISender sender,
+    CancellationToken ct) =>
+{
+    var id = claims.GetUserId();
+
+    if (id is null)
+    {
+        return Results.BadRequest();
+    }
+
+    var command = new EnableTwoFactorCommand(
+        id.Value,
+        request.Code);
+
+    var enabled = await sender.Send(command, ct);
+
+    return enabled
+        ? Results.Ok()
+        : Results.BadRequest();
+})
+.RequireAuthorization(Role.Registered)
+.WithTags(SwaggerSetup.UserTag);
+
+
         app.MapGet(ApiBaseRoute + "/me", async (
                 ClaimsPrincipal claims,
                 ISender sender,
@@ -221,3 +271,5 @@ public static class UsersModule
             .WithTags(SwaggerSetup.UserTag);
     }
 }
+
+public sealed record EnableTwoFactorRequest(string Code);
